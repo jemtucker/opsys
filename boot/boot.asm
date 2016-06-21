@@ -6,8 +6,6 @@ section .text
 bits 32 
 
 start:
-	; Here we will set up memory paging tables
-
 	; Point the first entry of the level 4 page table to the first entry in the
     ; p3 table
     mov eax, p3_table
@@ -66,6 +64,7 @@ start:
 	mov es, ax
 
 	; jump to long mode!
+	extern long_mode_start
 	jmp gdt64.code:long_mode_start
 
 section .bss
@@ -79,6 +78,9 @@ p3_table:
     resb 4096
 p2_table:
     resb 4096
+stack_bottom:
+    resb 64
+stack_top:
 
 ; Set up Global Descriptor Table
 
@@ -94,12 +96,3 @@ gdt64:
     dq gdt64
 
 section .text
-
-; Finally into 64 bit mode :)
-bits 64
-long_mode_start:
-
-	mov rax, 0x2f592f412f4b2f4f
-    mov qword [0xb8000], rax
-    
-    hlt
