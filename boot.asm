@@ -1,30 +1,8 @@
-mov ax, 0x07c0
-mov ds, ax
+global start
 
-mov ah, 0x0
-mov al, 0x3
-int 0x10
-
-mov si, msg
-mov ah, 0x0E
-
-print_character_loop:
-    lodsb
-
-    or al, al
-    jz hang
-
-    int 0x10
-
-    jmp print_character_loop
-
-msg:
-    db 'Hello, World!', 13, 10, 0
-
-hang:
-    jmp hang
-
-    times 510-($-$$) db 0
-
-    db 0x55
-    db 0xAA
+section .text
+bits 32 ; Currently the CPU is in protected mode so only 32 bits available
+start:
+    ; print `OK` to screen
+    mov dword [0xb8000], 0x2f4b2f4f
+    hlt
