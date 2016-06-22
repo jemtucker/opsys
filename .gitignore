@@ -1,3 +1,5 @@
 *.o
 *.bin
-*.iso
+*.isotarget
+Cargo.lock
+target/

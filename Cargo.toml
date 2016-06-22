@@ -1,0 +1,9 @@
+[package]
+name = "OpSys"
+version = "0.1.0"
+authors = ["Jem Tucker <jem.tucker@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
