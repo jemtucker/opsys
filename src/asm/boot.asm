@@ -6,6 +6,9 @@ section .text
 bits 32 
 
 start:
+    mov esp, stack_top
+    mov edi, ebx       ; Move Multiboot info pointer to edi to be passed into kernel_main
+
 	; Point the first entry of the level 4 page table to the first entry in the
     ; p3 table
     mov eax, p3_table
