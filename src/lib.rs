@@ -10,13 +10,16 @@ extern crate multiboot2;
 
 #[macro_use]
 mod vga_buffer;
+mod memory;
+
+use memory::FrameAllocator;
 
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention
 #[no_mangle]
 pub extern fn kernel_main(multiboot_info_address: usize) {
 	vga_buffer::clear_screen();
-	
+
 	log_boot_info(multiboot_info_address);
 
 	loop { }
@@ -60,6 +63,17 @@ fn log_boot_info(multiboot_info_address: usize) {
 	let multiboot_end = multiboot_start + (boot_info.total_size as usize);
 
 	kprintln!("Multiboot Start: {}, Multiboot End: {}", multiboot_start, multiboot_end);
+
+	let mut frame_allocator = memory::AreaFrameAllocator::new(
+	    kernel_start as usize, kernel_end as usize, multiboot_start,
+	    multiboot_end, memory_map_tag.memory_areas());
+
+	for i in 0.. {
+	    if let None = frame_allocator.allocate_frame() {
+	        kprintln!("allocated {} frames", i);
+	        break;
+	    }
+	}
 }
 
 // For stack-unwinding, not supported currently
