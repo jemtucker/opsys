@@ -58,6 +58,12 @@ start:
     or eax, 1 << 16
     mov cr0, eax
 
+    ; Point the last entry in the P4 table back to itself
+    ; AKA recursive table mapping.
+    mov eax, p4_table
+    or eax, 0b11 ; present + writable
+    mov [p4_table + 511 * 8], eax
+
     ; load Global Descriptor Table
     lgdt [gdt64.pointer]
 
