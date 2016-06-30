@@ -1,5 +1,7 @@
 mod paging;
 
+pub use self::paging::test_paging;
+
 use self::paging::PhysicalAddress;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]

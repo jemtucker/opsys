@@ -89,7 +89,7 @@ p3_table:
 p2_table:
     resb 4096
 stack_bottom:
-    resb 4096 ; Stack size
+    resb 4096 * 2 ; Stack size
 stack_top:
 
 ; Set up Global Descriptor Table

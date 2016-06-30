@@ -4,6 +4,7 @@
 
 #![no_std]
 
+extern crate x86;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
@@ -15,7 +16,6 @@ extern crate bitflags;
 mod vga_buffer;
 mod memory;
 
-
 use memory::FrameAllocator;
 
 // Main entry point, need no_mangle so we can call from assembly
@@ -24,6 +24,7 @@ use memory::FrameAllocator;
 pub extern fn kernel_main(multiboot_info_address: usize) {
 	vga_buffer::clear_screen();
 
+	// Log some info about memory layout etc
 	log_boot_info(multiboot_info_address);
 
 	loop { }
@@ -72,12 +73,8 @@ fn log_boot_info(multiboot_info_address: usize) {
 	    kernel_start as usize, kernel_end as usize, multiboot_start,
 	    multiboot_end, memory_map_tag.memory_areas());
 
-	for i in 0.. {
-	    if let None = frame_allocator.allocate_frame() {
-	        kprintln!("allocated {} frames", i);
-	        break;
-	    }
-	}
+	// Test the paging code
+	memory::test_paging(&mut frame_allocator);
 }
 
 // For stack-unwinding, not supported currently

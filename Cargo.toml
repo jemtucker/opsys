@@ -21,3 +21,7 @@ bitflags = "0.7.0"
 
 [dependencies.multiboot2]
 git = "https://github.com/phil-opp/multiboot2-elf64"
+
+[dependencies.x86]
+version = "0.6.0"
+default-features = false

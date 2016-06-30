@@ -5,7 +5,7 @@ use memory::FrameAllocator;
 use core::ops::{Index, IndexMut};
 use core::marker::PhantomData;
 
-pub const P4: *mut Table<L> = 0xffffffff_fffff000 as *mut _;
+pub const P4: *mut Table<Level4> = 0xffffffff_fffff000 as *mut _;
 
 pub trait TableLevel {}
 
