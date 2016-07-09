@@ -45,6 +45,9 @@ cargo: target/libcore/target/$(TARGET)/libcore.rlib
 run: target/os.iso
 	qemu-system-x86_64 -cdrom target/os.iso
 
+debug: target/os.iso
+	qemu-system-x86_64 -cdrom target/os.iso -s -S
+
 clean: 
 	cargo clean
 
