@@ -101,8 +101,7 @@ impl Mapper {
 		unsafe { ::x86::tlb::flush(page.start_address()); }
 
 	    // TODO free p(1,2,3) table if empty
-	    
-	    allocator.deallocate_frame(frame);
+	    // allocator.deallocate_frame(frame);
 	}
 
     pub fn p4(&self) -> &Table<Level4> {

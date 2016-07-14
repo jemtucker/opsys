@@ -105,4 +105,3 @@ gdt64:
     dw .pointer - gdt64 - 1
     dq gdt64
 
-section .text

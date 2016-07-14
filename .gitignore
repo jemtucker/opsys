@@ -3,3 +3,6 @@
 *.isotarget
 Cargo.lock
 target/
+
+.idea/
+*.iml

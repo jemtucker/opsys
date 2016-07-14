@@ -1,6 +1,8 @@
 global long_mode_start
 
 ; Finally into 64 bit mode :)
+
+section .text
 bits 64
 long_mode_start:
 	
