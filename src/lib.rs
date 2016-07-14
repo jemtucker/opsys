@@ -53,7 +53,12 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
 
 	log_boot_info(multiboot_info_address);
 
+    // Configure the CPU flags as required
+    enable_nxe_bit(); // Allow the NO_EXECUTABLE flag
+    enable_write_protect_bit(); // Ensure non-writable by default
+
     memory::remap_the_kernel(&mut frame_allocator, boot_info);
+
     kprintln!("It did not crash!");
 
 	loop { }
@@ -104,6 +109,23 @@ fn log_boot_info(multiboot_info_address: usize) {
 
 	// Test the paging code
 	// memory::test_paging(&mut frame_allocator);
+}
+
+fn enable_nxe_bit() {
+	use x86::msr::{IA32_EFER, rdmsr, wrmsr};
+
+	let nxe_bit = 1 << 11;
+	unsafe {
+		let efer = rdmsr(IA32_EFER);
+		wrmsr(IA32_EFER, efer | nxe_bit);
+	}
+}
+
+fn enable_write_protect_bit() {
+    use x86::controlregs::{cr0, cr0_write};
+
+    let wp_bit = 1 << 16;
+    unsafe { cr0_write(cr0() | wp_bit) };
 }
 
 // For stack-unwinding, not supported currently

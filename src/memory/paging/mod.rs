@@ -131,6 +131,22 @@ impl ActivePageTable {
 
 	    temporary_page.unmap(self);
 	}
+
+    pub fn switch(&mut self, new_table: InactivePageTable) -> InactivePageTable {
+        use x86::controlregs;
+
+        let old_table = InactivePageTable {
+            p4_frame: Frame::containing_address(
+                unsafe { controlregs::cr3() } as usize
+            ),
+        };
+
+        unsafe {
+            controlregs::cr3_write(new_table.p4_frame.start_address() as u64);
+        }
+
+        old_table
+    }
 }
 
 pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
@@ -146,6 +162,8 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
     };
 
     active_table.with(&mut new_table, &mut temporary_page, |mapper| {
+
+        // Identity map the kernel sections
         let elf_sections_tag = boot_info.elf_sections_tag()
             .expect("Memory map tag required");
 
@@ -157,16 +175,13 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
 		        continue;
 		    }
 
-			kprintln!("mapping section at addr: {:#x}, size: {:#x}",
+            kprintln!("mapping section at addr: {:#x}, size: {}",
 		        section.addr, section.size);
 
 			assert!(section.addr as usize % PAGE_SIZE == 0,
 		            "sections need to be page aligned");
 
-		    kprintln!("mapping section at addr: {:#x}, size: {}",
-		        section.addr, section.size);
-
-		    let flags = WRITABLE; // TODO use real section flags
+            let flags = EntryFlags::from_elf_section_flags(section);
 
 		    let start_frame = Frame::containing_address(section.start_address());
 		    let end_frame = Frame::containing_address(section.end_address() - 1);
@@ -174,7 +189,21 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
 		        mapper.identity_map(frame, flags, allocator);
 		    }
         }
+
+        // Identity map the VGA text buffer
+        let vga_buffer_frame = Frame::containing_address(0xb8000);
+        mapper.identity_map(vga_buffer_frame, WRITABLE, allocator);
+
+        // Identity map the multiboot info structure
+        let multiboot_start = Frame::containing_address(boot_info.start_address());
+        let multiboot_end = Frame::containing_address(boot_info.end_address() - 1);
+        for frame in Frame::range_inclusive(multiboot_start, multiboot_end) {
+            mapper.identity_map(frame, PRESENT, allocator);
+        }
     });
+
+    let old_table = active_table.switch(new_table);
+    kprintln!("Success, we have switched to the new table :)");
 }
 
 pub fn test_paging<A>(allocator: &mut A)
