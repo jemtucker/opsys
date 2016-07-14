@@ -204,6 +204,13 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
 
     let old_table = active_table.switch(new_table);
     kprintln!("Success, we have switched to the new table :)");
+
+    // Add a guard page (the old p4 page)
+    let old_p4_page = Page::containing_address(
+        old_table.p4_frame.start_address()
+    );
+    active_table.unmap(old_p4_page, allocator);
+    kprintln!("guard page at {:#x}", old_p4_page.start_address());
 }
 
 pub fn test_paging<A>(allocator: &mut A)
