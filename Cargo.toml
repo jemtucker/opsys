@@ -28,3 +28,6 @@ default-features = false
 
 [dependencies.jem_alloc]
 path = "libs/jem_alloc"
+
+[dependencies.alloc]
+path = "target/liballoc"

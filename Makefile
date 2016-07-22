@@ -38,8 +38,11 @@ target/libcore/target/$(TARGET)/libcore.rlib: target/libcore $(TARGET).json
 	cp $(TARGET).json target/libcore
 	cd target/libcore && cargo build --release --features disable_float --target=$(TARGET).json
 
-cargo: target/libcore/target/$(TARGET)/libcore.rlib
-	RUSTFLAGS="-L target/libcore/target/$(TARGET)/release" cargo build --release --target=$(TARGET).json
+target/liballoc:
+	git clone https://github.com/jemtucker/nightly-liballoc.git target/liballoc
+
+cargo: target/libcore/target/$(TARGET)/libcore.rlib target/liballoc
+	RUSTFLAGS="-L target/libcore/target/$(TARGET)/release -L target/liballoc/target/$(TARGET)/liballoc.rlib" cargo build --release --target=$(TARGET).json
 
 
 run: target/os.iso

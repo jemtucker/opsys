@@ -34,8 +34,13 @@ impl Allocator {
     }
 
     pub fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
-        // TODO
-        unimplemented!();
+        // All we do for now is set the block header flag.
+        // TODO - We need to handle merging
+        let header = ptr as *mut usize;
+
+        unsafe {
+            *header = dealloc_header(*header);
+        }
     }
 
     fn next_fit(&mut self, size: usize) -> bool {
@@ -107,8 +112,14 @@ fn block_size(header: usize) -> usize {
 }
 
 #[inline]
-fn alloc_header(size: usize) -> usize {
-    size | ALLOCATED_MASK
+fn alloc_header(header: usize) -> usize {
+    header | ALLOCATED_MASK
+}
+
+#[inline]
+fn dealloc_header(header: usize) -> usize {
+    // Exactly the same as block_size
+    block_size(header)
 }
 
 fn get_req_size(size: usize) -> usize {

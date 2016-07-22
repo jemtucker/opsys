@@ -24,25 +24,25 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
 #[no_mangle]
 pub extern fn __rust_usable_size(size: usize, align: usize) -> usize {
     // TODO
-    0
+    size
 }
 
 #[no_mangle]
 pub extern fn __rust_deallocate(ptr: *mut u8, size: usize, align: usize) {
-    ALLOCATOR.lock().dealloc(ptr, size, align)
+    ALLOCATOR.lock().dealloc(ptr, size, align);
 }
 
 #[no_mangle]
 pub extern fn __rust_reallocate(ptr: *mut u8, size: usize, new_size: usize,
                                 align: usize) -> *mut u8 {
-    // TODO
-    ALLOCATOR.lock().alloc(size, align).expect("Out of memory")
+    ALLOCATOR.lock().dealloc(ptr, size, align);
+    ALLOCATOR.lock().alloc(new_size, align).expect("Out of memory")
 }
 
 #[no_mangle]
 pub extern fn __rust_reallocate_inplace(ptr: *mut u8, size: usize,
                                         new_size: usize, align: usize)
                                         -> usize {
-    // TODO
+    // Unsupported so just return size
     size
 }

@@ -1,6 +1,7 @@
 #![feature(lang_items)]
 #![feature(const_fn)]
 #![feature(unique)]
+#![feature(alloc, collections)]
 
 #![no_std]
 
@@ -8,6 +9,11 @@ extern crate x86;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
+extern crate jem_alloc;
+extern crate alloc;
+
+//#[macro_use]
+//extern crate collections;
 
 #[macro_use]
 extern crate bitflags;
@@ -60,6 +66,11 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
     memory::remap_the_kernel(&mut frame_allocator, boot_info);
 
     kprintln!("It did not crash!");
+
+    use alloc::boxed::Box;
+    let heap_test = Box::new(123);
+
+    kprintln!("It still did not crash!");
 
 	loop { }
 }
