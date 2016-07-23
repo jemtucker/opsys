@@ -30,4 +30,4 @@ default-features = false
 path = "libs/jem_alloc"
 
 [dependencies.alloc]
-path = "libs/liballoc"
+git = "https://github.com/phil-opp/nightly-liballoc.git"
