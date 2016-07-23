@@ -31,15 +31,16 @@ target/os.iso: target/kernel.bin src/asm/grub.cfg
 	$(GRUB_MKRESCUE) -o target/os.iso target/isofiles
 
 target/libcore:
-	git clone http://github.com/intermezzos/libcore target/libcore
-	cd target/libcore && git reset --hard 02e41cd5b925a1c878961042ecfb00470c68296b
+	#git clone http://github.com/intermezzos/libcore target/libcore
+	#cd target/libcore && git reset --hard 02e41cd5b925a1c878961042ecfb00470c68296b
+	git clone http://github.com/phil-opp/nightly-libcore target/libcore
 
 target/libcore/target/$(TARGET)/libcore.rlib: target/libcore $(TARGET).json
 	cp $(TARGET).json target/libcore
 	cd target/libcore && cargo build --release --features disable_float --target=$(TARGET).json
 
 target/liballoc:
-	git clone https://github.com/jemtucker/nightly-liballoc.git target/liballoc
+	git clone https://github.com/phil-opp/nightly-liballoc.git target/liballoc
 
 cargo: target/libcore/target/$(TARGET)/libcore.rlib target/liballoc
 	RUSTFLAGS="-L target/libcore/target/$(TARGET)/release -L target/liballoc/target/$(TARGET)/liballoc.rlib" cargo build --release --target=$(TARGET).json

@@ -152,3 +152,8 @@ extern fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
     // Hang here.
     loop { }
 }
+
+#[no_mangle]
+pub extern fn _Unwind_Resume() -> ! {
+    loop {}
+}
