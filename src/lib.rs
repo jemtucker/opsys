@@ -1,7 +1,8 @@
 #![feature(lang_items)]
 #![feature(const_fn)]
 #![feature(unique)]
-#![feature(alloc, collections)]
+#![feature(alloc)]
+#![feature(asm)]
 
 #![no_std]
 
@@ -19,8 +20,12 @@ extern crate alloc;
 extern crate bitflags;
 
 #[macro_use]
+extern crate once;
+
+#[macro_use]
 mod vga_buffer;
 mod memory;
+mod interrupts;
 
 use memory::FrameAllocator;
 
@@ -34,6 +39,7 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
 
     init_cpu();
     memory::init(multiboot_info_address);
+    interrupts::init();
 
     kprintln!("It did not crash!");
 
@@ -41,6 +47,10 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
     let heap_test = Box::new(123);
 
     kprintln!("It still did not crash! {}", heap_test);
+
+    unsafe {
+        asm!("mov dx, 0; div dx" ::: "ax", "dx" : "volatile", "intel")
+    }
 
 	loop { }
 }
