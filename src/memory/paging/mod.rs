@@ -18,7 +18,7 @@ pub type VirtualAddress = usize;
 
 const ENTRY_COUNT: usize = 512;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Page {
    number: usize,
 }
@@ -30,6 +30,13 @@ impl Page {
 	        "invalid address: 0x{:x}", address);
 	    Page { number: address / PAGE_SIZE }
 	}
+
+    pub fn range_inclusive(start: Page, end: Page) -> PageIter {
+        PageIter {
+            start: start,
+            end: end,
+        }
+    }
 
 	fn start_address(&self) -> usize {
 	    self.number * PAGE_SIZE
@@ -50,6 +57,25 @@ impl Page {
 	fn p1_index(&self) -> usize {
 	    (self.number >> 0) & 0o777
 	}
+}
+
+pub struct PageIter {
+    start: Page,
+    end: Page,
+}
+
+impl Iterator for PageIter {
+    type Item = Page;
+
+    fn next(&mut self) -> Option<Page> {
+        if self.start <= self.end {
+            let page = self.start;
+            self.start.number += 1;
+            Some(page)
+        } else {
+            None
+        }
+    }
 }
 
 pub struct InactivePageTable {
@@ -149,7 +175,7 @@ impl ActivePageTable {
     }
 }
 
-pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
+pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation) -> ActivePageTable
     where A: FrameAllocator
 {
     let mut temporary_page = TemporaryPage::new(Page { number: 0xcafebabe },
@@ -211,6 +237,8 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
     );
     active_table.unmap(old_p4_page, allocator);
     kprintln!("guard page at {:#x}", old_p4_page.start_address());
+
+    active_table
 }
 
 pub fn test_paging<A>(allocator: &mut A)
@@ -251,6 +279,4 @@ pub fn test_paging<A>(allocator: &mut A)
 	// Unmap page
 	page_table.unmap(Page::containing_address(addr), allocator);
 	kprintln!("None = {:?}", page_table.translate(addr));
-
-
 }

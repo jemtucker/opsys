@@ -1,7 +1,3 @@
-use spin::Mutex;
-use core::ptr;
-
-const HEADER_SIZE: usize = 8;
 const MIN_BLOCK_SIZE: usize = 16;
 
 pub struct Allocator {
@@ -39,6 +35,7 @@ impl Allocator {
         let header = ptr as *mut usize;
 
         unsafe {
+            assert!(block_size(*header) == size);
             *header = dealloc_header(*header);
         }
     }
@@ -102,7 +99,7 @@ const ALLOCATED_MASK: usize = 0x8000_0000_0000_0000;
 #[inline]
 fn block_is_free(header: usize) -> bool {
     // Free if the first bit is not set
-    (header & ALLOCATED_MASK) < 0
+    (header & ALLOCATED_MASK) == 0
 }
 
 #[inline]
