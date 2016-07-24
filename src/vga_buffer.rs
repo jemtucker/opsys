@@ -141,6 +141,7 @@ pub unsafe fn print_error(fmt: fmt::Arguments) {
         color_code: ColorCode::new(Color::Red, Color::Black),
         buffer: Unique::new(0xb8000 as *mut _),
     };
+
     writer.new_line();
-    writer.write_fmt(fmt);
+    let _ = writer.write_fmt(fmt);
 }
