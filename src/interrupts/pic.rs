@@ -89,8 +89,8 @@ impl Pic {
         self.pic2.write(ICW4_8086);
         io_wait();
 
-        self.pic1.write(mask1);   // restore saved masks.
-        self.pic2.write(mask2);
+        self.pic1.write(0xff);   // restore saved masks.
+        self.pic2.write(0xff);
     }
 
     pub fn send_end_of_interrupt(&self, irq: u8) {

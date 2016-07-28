@@ -1,6 +1,7 @@
 mod idt;
 mod pic;
 
+use x86;
 use super::vga_buffer;
 
 // Default interrupt handler to simply log the interrupt id.
@@ -24,10 +25,9 @@ lazy_static! {
     static ref IDT: idt::Idt = {
         let mut idt = idt::Idt::new();
 
-        // Set all the handlers
+        // Set all the handlers. Set default handler if a specific is not defined
+        // to help debugging
         idt.set_handler(0, divide_by_zero_handler);
-
-        // Set default handlers for others
         default_handler!(idt, 1);
         default_handler!(idt, 2);
         default_handler!(idt, 3);
@@ -59,7 +59,7 @@ lazy_static! {
         default_handler!(idt, 29);
         default_handler!(idt, 30);
         default_handler!(idt, 31);
-        default_handler!(idt, 32);
+        idt.set_handler(32, keyboard_handler);
         default_handler!(idt, 33);
         default_handler!(idt, 34);
         default_handler!(idt, 35);
@@ -84,16 +84,17 @@ pub fn init() {
     PIC.init();
 
     // Enable some pic interrupts
-    PIC.clear_mask(0);
+    //PIC.clear_mask(0);
     PIC.clear_mask(1);
-    PIC.clear_mask(2);
-    PIC.clear_mask(3);
-    PIC.clear_mask(4);
-    PIC.clear_mask(5);
+    //PIC.clear_mask(2);
+    //PIC.clear_mask(3);
+    //PIC.clear_mask(4);
+    //PIC.clear_mask(5);
 
     IDT.load();
 
-    //unsafe { asm!("int $33"); }
+    // Enable interrupts
+    unsafe { x86::irq::enable(); }
 }
 
 // Some handlers...
@@ -104,4 +105,14 @@ extern "C" fn divide_by_zero_handler() -> ! {
     }
 
     loop {}
+}
+
+extern "C" fn keyboard_handler() -> ! {
+    unsafe {
+        vga_buffer::print_error(format_args!("Keypress"));
+    }
+
+    PIC.send_end_of_interrupt(1);
+
+    loop {};
 }

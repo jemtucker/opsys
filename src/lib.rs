@@ -6,6 +6,7 @@
 
 #![no_std]
 
+#[macro_use]
 extern crate x86;
 extern crate rlibc;
 extern crate spin;
