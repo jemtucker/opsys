@@ -1,12 +1,12 @@
 use x86::segmentation::{self, SegmentSelector};
 
 pub struct Idt {
-    table: [Entry; 16]
+    table: [Entry; 255]
 }
 
 impl Idt {
     pub fn new() -> Idt {
-        Idt { table: [Entry::empty(); 16] }
+        Idt { table: [Entry::empty(); 255] }
     }
 
     pub fn set_handler(&mut self, entry: u8, handler: HandlerFunc) -> &mut EntryOptions {
