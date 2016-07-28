@@ -3,6 +3,7 @@
 #![feature(unique)]
 #![feature(alloc)]
 #![feature(asm)]
+#![feature(core_intrinsics)]
 
 #![no_std]
 

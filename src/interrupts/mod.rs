@@ -2,6 +2,7 @@ mod idt;
 mod pic;
 
 use x86;
+use core::intrinsics;
 use super::vga_buffer;
 
 // Default interrupt handler to simply log the interrupt id.
@@ -59,8 +60,8 @@ lazy_static! {
         default_handler!(idt, 29);
         default_handler!(idt, 30);
         default_handler!(idt, 31);
-        idt.set_handler(32, keyboard_handler);
-        default_handler!(idt, 33);
+        default_handler!(idt, 32);
+        idt.set_handler(33, keyboard_handler);
         default_handler!(idt, 34);
         default_handler!(idt, 35);
         default_handler!(idt, 36);
@@ -110,9 +111,12 @@ extern "C" fn divide_by_zero_handler() -> ! {
 extern "C" fn keyboard_handler() -> ! {
     unsafe {
         vga_buffer::print_error(format_args!("Keypress"));
+        PIC.send_end_of_interrupt(1);
+        iret();
     }
+}
 
-    PIC.send_end_of_interrupt(1);
-
-    loop {};
+unsafe fn iret() -> ! {
+    asm!("iretq");
+    intrinsics::unreachable();
 }
