@@ -4,6 +4,7 @@
 #![feature(alloc)]
 #![feature(asm)]
 #![feature(core_intrinsics)]
+#![feature(naked_functions)]
 
 #![no_std]
 

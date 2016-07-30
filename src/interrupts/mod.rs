@@ -5,20 +5,67 @@ use x86;
 use core::intrinsics;
 use super::vga_buffer;
 
+macro_rules! add_handler {
+    ($idt:expr, $int:expr, $handler:ident) => {{
+        #[naked]
+        extern "C" fn isr() -> ! { unsafe {
+            asm!("push rbp
+                  push r15
+                  push r14
+                  push r13
+                  push r12
+                  push r11
+                  push r10
+                  push r9
+                  push r8
+                  push rsi
+                  push rdi
+                  push rdx
+                  push rcx
+                  push rbx
+                  push rax
+                  mov rsi, rsp
+                  push rsi
+
+                  call $0
+                  add rsp, 8
+                  pop rax
+                  pop rbx
+                  pop rcx
+                  pop rdx
+                  pop rdi
+                  pop rsi
+                  pop r8
+                  pop r9
+                  pop r10
+                  pop r11
+                  pop r12
+                  pop r13
+                  pop r14
+                  pop r15
+                  pop rbp
+                  iretq" :: "s"($handler as fn()) :: "volatile", "intel");
+            intrinsics::unreachable();
+        }}
+
+        $idt.set_handler($int, isr);
+    }};
+}
+
 // Default interrupt handler to simply log the interrupt id.
 macro_rules! default_handler {
     ($idt:expr, $int:expr) => {{
-        extern "C" fn handler() -> ! {
+        fn handler() {
             unsafe {
                 vga_buffer::print_error(
-                    format_args!("EXCEPTION: Unhandled Interrupt ({:#})", $int)
+                    format_args!("EXCEPTION: Unhandled Interrupt (0x{:#})", $int)
                 );
             }
 
             loop {}
         }
 
-        $idt.set_handler($int, handler);
+        add_handler!($idt, $int, handler);
     }}
 }
 
@@ -28,7 +75,7 @@ lazy_static! {
 
         // Set all the handlers. Set default handler if a specific is not defined
         // to help debugging
-        idt.set_handler(0, divide_by_zero_handler);
+        add_handler!(idt, 0, divide_by_zero_handler);
         default_handler!(idt, 1);
         default_handler!(idt, 2);
         default_handler!(idt, 3);
@@ -61,7 +108,8 @@ lazy_static! {
         default_handler!(idt, 30);
         default_handler!(idt, 31);
         default_handler!(idt, 32);
-        idt.set_handler(33, keyboard_handler);
+        //default_handler!(idt, 33);
+        add_handler!(idt, 33, keyboard_handler);
         default_handler!(idt, 34);
         default_handler!(idt, 35);
         default_handler!(idt, 36);
@@ -100,7 +148,7 @@ pub fn init() {
 
 // Some handlers...
 
-extern "C" fn divide_by_zero_handler() -> ! {
+fn divide_by_zero_handler() {
     unsafe {
         vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero"));
     }
@@ -108,15 +156,9 @@ extern "C" fn divide_by_zero_handler() -> ! {
     loop {}
 }
 
-extern "C" fn keyboard_handler() -> ! {
+fn keyboard_handler() {
     unsafe {
         vga_buffer::print_error(format_args!("Keypress"));
         PIC.send_end_of_interrupt(1);
-        iret();
     }
-}
-
-unsafe fn iret() -> ! {
-    asm!("iretq");
-    intrinsics::unreachable();
 }
