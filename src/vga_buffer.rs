@@ -142,6 +142,6 @@ pub unsafe fn print_error(fmt: fmt::Arguments) {
         buffer: Unique::new(0xb8000 as *mut _),
     };
 
-    writer.new_line();
     let _ = writer.write_fmt(fmt);
+    writer.new_line();
 }

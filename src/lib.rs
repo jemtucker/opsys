@@ -29,6 +29,8 @@ extern crate once;
 mod vga_buffer;
 mod memory;
 mod interrupts;
+mod drivers;
+mod io;
 
 use memory::FrameAllocator;
 

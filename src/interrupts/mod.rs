@@ -158,7 +158,8 @@ fn divide_by_zero_handler() {
 
 fn keyboard_handler() {
     unsafe {
-        vga_buffer::print_error(format_args!("Keypress"));
+        let code = x86::io::inb(0x60);
+        vga_buffer::print_error(format_args!("Keypress: {}", code));
         PIC.send_end_of_interrupt(1);
     }
 }

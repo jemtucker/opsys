@@ -1,7 +1,7 @@
-use x86::io;
+use io;
 
-const PIC1: u8 = 0x20;
-const PIC2: u8 = 0xa0;
+const PIC1: u16 = 0x20;
+const PIC2: u16 = 0xa0;
 
 const PIC_EOI: u8 = 0x20;
 
@@ -20,48 +20,46 @@ const ICW4_SFNM: u8 = 0x10;         // Special fully nested (not)
 const PIC_READ_IRR: u8 = 0x0a;
 const PIC_READ_ISR: u8 = 0x0b;
 
-struct Port {
-    com: u16,
-    data: u16
+struct PicPort {
+    com: io::Port,
+    data: io::Port
 }
 
-impl Port {
-    pub const fn new(id: u8) -> Port {
-        Port {
-            com: id as u16,
-            data: id as u16 + 1
+impl PicPort {
+    pub const fn new(id: u16) -> PicPort {
+        PicPort {
+            com: io::Port::new(id),
+            data: io::Port::new(id + 1)
         }
     }
 
     pub fn command(&self, byte: u8) {
-        unsafe { io::outb(self.com, byte); }
+        unsafe { self.com.write(byte); }
     }
 
     pub fn result(&self) -> u8 {
-        unsafe { io::inb(self.com) }
+        unsafe { self.com.read() }
     }
 
     pub fn write(&self, byte: u8) {
-        unsafe { io::outb(self.data, byte);}
+        unsafe { self.data.write(byte); }
     }
 
     pub fn read(&self) -> u8 {
-        let b = unsafe { io::inb(self.data) };
-        kprintln!("Read: 0x{:x}", b);
-        b
+        unsafe { self.data.read() }
     }
 }
 
 pub struct Pic {
-    pic1: Port,
-    pic2: Port
+    pic1: PicPort,
+    pic2: PicPort
 }
 
 impl Pic {
     pub const fn new() -> Pic {
         Pic {
-            pic1: Port::new(PIC1),
-            pic2: Port::new(PIC2)
+            pic1: PicPort::new(PIC1),
+            pic2: PicPort::new(PIC2)
         }
     }
 
@@ -153,6 +151,6 @@ impl Pic {
 
 fn io_wait() {
     // Write some junk to port 0x80. This should take long enough for other io to complete
-    unsafe { io::outb(0x80, 0); }
+    unsafe { io::Port::new(0x80).write(0); }
 }
 
