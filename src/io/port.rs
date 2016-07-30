@@ -11,11 +11,16 @@ impl Port {
         }
     }
 
-    pub fn write(&self, byte: u8) {
-        unsafe { io::outb(self.id, byte);}
+    pub unsafe fn write(&self, byte: u8) {
+        io::outb(self.id, byte);
     }
 
-    pub fn read(&self) -> u8 {
-        unsafe { io::inb(self.id) }
+    pub unsafe fn read(&self) -> u8 {
+        io::inb(self.id)
+    }
+
+    pub fn io_wait() {
+        // Write some junk to port 0x80. This should take long enough for any other io to complete
+        unsafe { io::outb(0x80, 0); }
     }
 }

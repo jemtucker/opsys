@@ -3,7 +3,8 @@ mod pic;
 
 use x86;
 use core::intrinsics;
-use super::vga_buffer;
+use drivers;
+use vga_buffer;
 
 macro_rules! add_handler {
     ($idt:expr, $int:expr, $handler:ident) => {{
@@ -158,8 +159,7 @@ fn divide_by_zero_handler() {
 
 fn keyboard_handler() {
     unsafe {
-        let code = x86::io::inb(0x60);
-        vga_buffer::print_error(format_args!("Keypress: {}", code));
+        drivers::KEYBOARD.handle_keypress();
         PIC.send_end_of_interrupt(1);
     }
 }

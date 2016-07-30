@@ -6,16 +6,8 @@ const PIC2: u16 = 0xa0;
 const PIC_EOI: u8 = 0x20;
 
 const ICW1_ICW4: u8 = 0x01;         // ICW4 (not) needed
-const ICW1_SINGLE: u8 = 0x02;       // Single (cascade) mode
-const ICW1_INTERVAL4: u8 = 0x04;    // Call address interval 4 (8)
-const ICW1_LEVEL: u8 = 0x08;        // Level triggered (edge) mode
 const ICW1_INIT: u8 = 0x10;         // Initialization - required!
-
 const ICW4_8086: u8 = 0x01;         // 8086/88 (MCS-80/85) mode
-const ICW4_AUTO: u8 = 0x02;         // Auto (normal) EOI
-const ICW4_BUF_SLAVE: u8 = 0x08;    // Buffered mode/slave
-const ICW4_BUF_MASTER: u8 = 0x0C;   // Buffered mode/master
-const ICW4_SFNM: u8 = 0x10;         // Special fully nested (not)
 
 const PIC_READ_IRR: u8 = 0x0a;
 const PIC_READ_ISR: u8 = 0x0b;
@@ -70,24 +62,25 @@ impl Pic {
 
         // Start the initialization sequences
         self.pic1.command(ICW1_INIT + ICW1_ICW4);
-        io_wait();
+        io::Port::io_wait();
         self.pic2.command(ICW1_INIT + ICW1_ICW4);
-        io_wait();
+        io::Port::io_wait();
         self.pic1.write(0x20);  // ICW2: Master PIC vector offset
-        io_wait();
+        io::Port::io_wait();
         self.pic2.write(0x28);  // ICW2: Slave PIC vector offset
-        io_wait();
+        io::Port::io_wait();
         self.pic1.write(4);     // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0100)
-        io_wait();
+        io::Port::io_wait();
         self.pic2.write(2);     // ICW3: tell Slave PIC its cascade identity (0000 0010)
-        io_wait();
+        io::Port::io_wait();
 
         self.pic1.write(ICW4_8086);
-        io_wait();
+        io::Port::io_wait();
         self.pic2.write(ICW4_8086);
-        io_wait();
+        io::Port::io_wait();
 
-        self.pic1.write(0xff);   // restore saved masks.
+        // Start with all interrupts off
+        self.pic1.write(0xff);
         self.pic2.write(0xff);
     }
 
@@ -147,10 +140,5 @@ impl Pic {
 
         reg1 as u16 | ((reg2 as u16) << 8)
     }
-}
-
-fn io_wait() {
-    // Write some junk to port 0x80. This should take long enough for other io to complete
-    unsafe { io::Port::new(0x80).write(0); }
 }
 
