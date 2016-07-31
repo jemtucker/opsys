@@ -55,7 +55,7 @@ impl Keyboard {
                 CHARS[code as usize] as char
             };
 
-            unsafe { vga_buffer::print_error(format_args!("{}", c)); }
+            unsafe { kprint!("{}", c); }
 
             Some(c)
         } else {
