@@ -64,6 +64,7 @@ impl Writer {
 
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
+            b'\x08' => self.column_position -= 1, // Backspace cant be escaped in rust
             b'\n' => self.new_line(),
             byte => {
                 if self.column_position >= BUFFER_WIDTH {

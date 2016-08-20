@@ -56,10 +56,6 @@ impl Pic {
     }
 
     pub fn init(&self) {
-        // Save the initial masks
-        let mask1 = self.pic1.read();
-        let mask2 = self.pic2.read();
-
         // Start the initialization sequences
         self.pic1.command(ICW1_INIT + ICW1_ICW4);
         io::Port::io_wait();

@@ -1,7 +1,6 @@
 use io::Port;
-use vga_buffer;
 
-static CHARS: [u8; 59] = *b"??1234567890-=??qwertyuiop[]\n?asdfghjkl;'`?\\zxcvbnm,./?*? ?";
+static CHARS: [u8; 59] = *b"??1234567890-=\x08?qwertyuiop[]\n?asdfghjkl;'`?\\zxcvbnm,./?*? ?";
 static CHARS_SHIFT: [u8; 59] = *b"??!@#$%^&*()_+??QWERTYUIOP{}\n?ASDFGHJKL:\"~?|ZXCVBNM<>??*? ?";
 
 pub struct Keyboard {
@@ -55,7 +54,7 @@ impl Keyboard {
                 CHARS[code as usize] as char
             };
 
-            unsafe { kprint!("{}", c); }
+            kprint!("{}", c);
 
             Some(c)
         } else {
