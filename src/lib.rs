@@ -51,11 +51,6 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
 
     kprintln!("It still did not crash! {}", heap_test);
 
-//    // Divide by zero
-//    unsafe {
-//        asm!("mov dx, 0; div dx" ::: "ax", "dx" : "volatile", "intel")
-//    }
-
 	loop { }
 }
 
