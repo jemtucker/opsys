@@ -5,13 +5,11 @@ mod temporary_page;
 
 pub use self::entry::*;
 pub use self::mapper::Mapper;
-use self::table::{Table, Level4};
 use self::temporary_page::TemporaryPage;
 use multiboot2::BootInformation;
 use memory::{PAGE_SIZE, Frame, FrameAllocator};
 
 use core::ops::{Deref, DerefMut};
-use core::ptr::Unique;
 
 pub type PhysicalAddress = usize;
 pub type VirtualAddress = usize;
@@ -194,8 +192,6 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation) -> Ac
             .expect("Memory map tag required");
 
         for section in elf_sections_tag.sections() {
-            use self::entry::WRITABLE;
-
 		    if !section.is_allocated() {
 		        // section is not loaded to memory
 		        continue;

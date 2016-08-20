@@ -1,5 +1,6 @@
 use spin::Mutex;
 use core::fmt;
+use io::Port;
 
 #[allow(dead_code)]
 #[repr(u8)]
@@ -64,7 +65,8 @@ impl Writer {
 
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
-            b'\x08' => self.column_position -= 1, // Backspace cant be escaped in rust
+            // Backspace cant be escaped in rust
+            b'\x08' => if self.column_position > 0 { self.column_position -= 1 },
             b'\n' => self.new_line(),
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
@@ -81,6 +83,9 @@ impl Writer {
                 self.column_position += 1;
             }
         }
+
+        // Finally update the cursor.
+        self.update_cursor();
     }
 
     fn buffer(&mut self) -> &mut Buffer {
@@ -104,6 +109,26 @@ impl Writer {
 	    };
 	    self.buffer().chars[row] = [blank; BUFFER_WIDTH];
 	}
+
+    fn update_cursor(&self) {
+        // For now the cursor will always be on the bottom row so we only need to worry about
+        // moving its column position. We also assume the location of the register as 0x3D4. In the
+        // future this should be read from BIOS.
+        // see - http://wiki.osdev.org/Text_Mode_Cursor#Moving_the_Cursor_without_the_BIOS
+        let position = ((BUFFER_HEIGHT - 1) * BUFFER_WIDTH) + self.column_position;
+
+        let port_low = Port::new(0x3D4);
+        let port_hgh = Port::new(0x3D5);
+
+        unsafe {
+            // Set column position
+            port_low.write(0x0F);
+            port_hgh.write((position & 0xFF) as u8);
+
+            port_low.write(0x0E);
+            port_hgh.write(((position >> 8) & 0xFF) as u8);
+        }
+    }
 }
 
 impl ::core::fmt::Write for Writer {
