@@ -34,8 +34,20 @@ libs/libcore/target/$(TARGET)/libcore.rlib: $(TARGET).json
 	cp $(TARGET).json libs/libcore
 	cd libs/libcore && cargo build --release --features disable_float --target=$(TARGET).json
 
-cargo: libs/libcore/target/$(TARGET)/libcore.rlib
-	RUSTFLAGS="-L libs/libcore/target/$(TARGET)/release" cargo build --release --target=$(TARGET).json
+libs/liballoc/target/$(TARGET)/liballoc.rlib: $(TARGET).json libs/libcore/target/$(TARGET)/libcore.rlib
+	cp $(TARGET).json libs/liballoc
+	cd libs/liballoc && RUSTFLAGS="-L ../libcore/target/$(TARGET)/release" cargo build --release --target=$(TARGET).json
+
+libs/libcollections/target/$(TARGET)/libcollections.rlib: $(TARGET).json libs/libcore/target/$(TARGET)/libcore.rlib libs/liballoc/target/$(TARGET)/liballoc.rlib libs/librustc_unicode/target/$(TARGET)/librustc_unicode.rlib
+	cp $(TARGET).json libs/libcollections
+	cd libs/libcollections && RUSTFLAGS="-L ../libcore/target/$(TARGET)/release -L ../liballoc/target/$(TARGET)/release -L ../librustc_unicode/target/$(TARGET)/release" cargo build --release --target=$(TARGET).json
+
+libs/librustc_unicode/target/$(TARGET)/librustc_unicode.rlib: $(TARGET).json libs/libcore/target/$(TARGET)/libcore.rlib
+	cp $(TARGET).json libs/librustc_unicode
+	cd libs/librustc_unicode && RUSTFLAGS="-L ../libcore/target/$(TARGET)/release" cargo build --release --target=$(TARGET).json
+
+cargo: libs/libcore/target/$(TARGET)/libcore.rlib libs/librustc_unicode/target/$(TARGET)/librustc_unicode.rlib libs/liballoc/target/$(TARGET)/liballoc.rlib libs/libcollections/target/$(TARGET)/libcollections.rlib
+	RUSTFLAGS="-L libs/libcore/target/$(TARGET)/release -L libs/librustc_unicode/target/$(TARGET)/release -L libs/liballoc/target/$(TARGET)/release -L libs/libcollections/target/$(TARGET)/release" cargo build --release --target=$(TARGET).json
 
 
 run: target/os.iso
@@ -50,4 +62,10 @@ clean:
 cleanall: clean
 	cd libs/libcore && cargo clean
 	rm libs/libcore/$(TARGET).json
+	cd libs/liballoc && cargo clean
+	rm libs/liballoc/$(TARGET).json
+	cd libs/libcollections && cargo clean
+	rm libs/libcollections/$(TARGET).json
+	cd libs/librustc_unicode && cargo clean
+	rm libs/librustc_unicode/$(TARGET).json
 
