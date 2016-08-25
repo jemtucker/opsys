@@ -5,6 +5,7 @@
 #![feature(asm)]
 #![feature(core_intrinsics)]
 #![feature(naked_functions)]
+#![feature(collections)]
 
 #![no_std]
 
@@ -16,8 +17,8 @@ extern crate multiboot2;
 extern crate jem_alloc;
 extern crate alloc;
 
-//#[macro_use]
-//extern crate collections;
+#[macro_use]
+extern crate collections;
 
 #[macro_use]
 extern crate bitflags;
