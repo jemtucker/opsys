@@ -1,6 +1,3 @@
-[submodule "libs/libcore"]
-	path = libs/libcore
-	url = https://github.com/jemtucker/nightly-libcore.git
 [submodule "libs/librustc_unicode"]
 	path = libs/librustc_unicode
 	url = https://github.com/phil-opp/nightly-librustc_unicode.git
@@ -10,3 +7,6 @@
 [submodule "libs/libcollections"]
 	path = libs/libcollections
 	url = https://github.com/phil-opp/nightly-libcollections.git
+[submodule "libs/libcore"]
+	path = libs/libcore
+	url = https://github.com/jemtucker/nightly-libcore.git
