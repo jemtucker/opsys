@@ -1,6 +1,11 @@
 language: rust
 
 rust:
+  - nightly-2016-08-18
   - nightly
+
+matrix:
+  allow_failures:
+    - rust: nightly
 
 script: make cargo
