@@ -32,6 +32,7 @@ mod memory;
 mod interrupts;
 mod drivers;
 mod io;
+mod schedule;
 
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention

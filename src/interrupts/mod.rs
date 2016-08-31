@@ -5,6 +5,7 @@ use x86;
 use core::intrinsics;
 use drivers;
 use vga_buffer;
+use schedule;
 
 macro_rules! add_handler {
     ($idt:expr, $int:expr, $handler:ident) => {{
@@ -108,21 +109,15 @@ lazy_static! {
         default_handler!(idt, 29);
         default_handler!(idt, 30);
         default_handler!(idt, 31);
-        default_handler!(idt, 32);
-        //default_handler!(idt, 33);
-        add_handler!(idt, 33, keyboard_handler);
-        default_handler!(idt, 34);
-        default_handler!(idt, 35);
-        default_handler!(idt, 36);
-        default_handler!(idt, 37);
-        default_handler!(idt, 38);
-        default_handler!(idt, 39);
-        default_handler!(idt, 40);
-        default_handler!(idt, 41);
-        default_handler!(idt, 42);
-        default_handler!(idt, 43);
-        default_handler!(idt, 44);
-        default_handler!(idt, 45);
+        add_handler!(idt, 32, irq0_handler); // IRQ 0
+        add_handler!(idt, 33, irq1_handler); // IRQ 1
+        default_handler!(idt, 34); // IRQ 3
+        default_handler!(idt, 35); // IRQ 4
+        default_handler!(idt, 36); // IRQ 5
+        default_handler!(idt, 37); // IRQ 6
+        default_handler!(idt, 38); // IRQ 7
+        default_handler!(idt, 39); // IRQ 8
+        default_handler!(idt, 40); // IRQ 9
 
         idt
     };
@@ -134,7 +129,7 @@ pub fn init() {
     PIC.init();
 
     // Enable some pic interrupts
-    //PIC.clear_mask(0);
+    PIC.clear_mask(0);
     PIC.clear_mask(1);
     //PIC.clear_mask(2);
     //PIC.clear_mask(3);
@@ -157,7 +152,17 @@ fn divide_by_zero_handler() {
     loop {}
 }
 
-fn keyboard_handler() {
+// IRQ Handlers...
+
+// Handler for IRQ0 - the PIT interrupt
+fn irq0_handler() {
+    let mut scheduler = schedule::SCHEDULER.lock();
+    scheduler.get_timer_mut().tick();
+    PIC.send_end_of_interrupt(0);
+}
+
+// Handler for IRQ1 - the keyboard interrupt
+fn irq1_handler() {
     unsafe {
         drivers::KEYBOARD.handle_keypress();
         PIC.send_end_of_interrupt(1);
