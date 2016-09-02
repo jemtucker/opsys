@@ -3,5 +3,5 @@ pub trait Timer {
     fn tick(&mut self);
 
     // Get the current tick count.
-    fn get_ticks(&self) -> usize;
+    fn run_in(&mut self, interval: usize, func: fn());
 }

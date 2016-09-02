@@ -6,4 +6,7 @@ mod pit;
 use self::scheduler::Scheduler;
 use spin::Mutex;
 
-pub static SCHEDULER: Mutex<Scheduler> = Mutex::new(Scheduler::new());
+
+lazy_static! {
+    pub static ref SCHEDULER: Mutex<Scheduler> = Mutex::new(Scheduler::new());
+}

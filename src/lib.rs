@@ -6,6 +6,7 @@
 #![feature(core_intrinsics)]
 #![feature(naked_functions)]
 #![feature(collections)]
+#![feature(drop_types_in_const)]
 
 #![no_std]
 
@@ -38,20 +39,12 @@ mod schedule;
 // Extern to abide with C calling convention
 #[no_mangle]
 pub extern fn kernel_main(multiboot_info_address: usize) {
-
-    vga_buffer::clear_screen();
-    kprintln!("OpSys v{}", "0.0.1");
-
     init_cpu();
     memory::init(multiboot_info_address);
     interrupts::init();
 
-    kprintln!("It did not crash!");
-
-    use alloc::boxed::Box;
-    let heap_test = Box::new(123);
-
-    kprintln!("It still did not crash! {}", heap_test);
+    vga_buffer::clear_screen();
+    kprintln!("OpSys v{}", "0.0.1");
 
 	loop { }
 }
