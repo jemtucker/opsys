@@ -7,6 +7,7 @@
 #![feature(naked_functions)]
 #![feature(collections)]
 #![feature(drop_types_in_const)]
+#![feature(box_syntax)]
 
 #![no_std]
 
@@ -34,13 +35,20 @@ mod interrupts;
 mod drivers;
 mod io;
 mod schedule;
+mod kernel;
 
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention
 #[no_mangle]
 pub extern fn kernel_main(multiboot_info_address: usize) {
+    // Initialise the hardware
     init_cpu();
     memory::init(multiboot_info_address);
+
+    // Setup the kernel
+    kernel::init();
+
+    // Initialize interrupts
     interrupts::init();
 
     vga_buffer::clear_screen();

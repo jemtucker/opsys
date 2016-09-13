@@ -1,26 +1,30 @@
 use super::timer::Timer;
-use super::pit::Pit;
+use collections::vec::Vec;
 
 pub struct Scheduler {
-    timer: Pit
+    timers: Vec<Timer>
 }
 
 impl Scheduler {
     pub fn new() -> Scheduler {
-        let mut s = Scheduler {
-            timer: Pit::new()
-        };
-
-        s.timer.run_in(10, Scheduler::schedule);
-
-        s
+        Scheduler {
+            timers: Vec::new()
+        }
     }
 
-    pub fn get_timer_mut(&mut self) -> &mut Timer {
-        &mut self.timer
+    pub fn tick(&mut self) {
+        let mut new_timers: Vec<Timer> = Vec::new();
+
+        for mut timer in self.timers.iter_mut() {
+            if !timer.tick() {
+                new_timers.push(timer.clone());
+            }
+        }
+
+        self.timers = new_timers;
     }
 
-    fn schedule() {
-        kprintln!("BOOM");
+    pub fn schedule(&mut self, what: fn(), when: usize) {
+        self.timers.push(Timer::new(what, when));
     }
 }

@@ -5,7 +5,8 @@ use x86;
 use core::intrinsics;
 use drivers;
 use vga_buffer;
-use schedule;
+
+use kernel::kget;
 
 macro_rules! add_handler {
     ($idt:expr, $int:expr, $handler:ident) => {{
@@ -60,7 +61,7 @@ macro_rules! default_handler {
         fn handler() {
             unsafe {
                 vga_buffer::print_error(
-                    format_args!("EXCEPTION: Unhandled Interrupt (0x{:#})", $int)
+                    format_args!("EXCEPTION: Unhandled Interrupt ({:x})", $int)
                 );
             }
 
@@ -77,7 +78,7 @@ lazy_static! {
 
         // Set all the handlers. Set default handler if a specific is not defined
         // to help debugging
-        add_handler!(idt, 0, divide_by_zero_handler);
+        add_handler!(idt, 0, exept_00);
         default_handler!(idt, 1);
         default_handler!(idt, 2);
         default_handler!(idt, 3);
@@ -91,7 +92,7 @@ lazy_static! {
         default_handler!(idt, 11);
         default_handler!(idt, 12);
         default_handler!(idt, 13);
-        default_handler!(idt, 14);
+        add_handler!(idt, 14, exept_0E);
         default_handler!(idt, 15);
         default_handler!(idt, 16);
         default_handler!(idt, 17);
@@ -144,9 +145,19 @@ pub fn init() {
 
 // Some handlers...
 
-fn divide_by_zero_handler() {
+// Divide by zero
+fn exept_00() {
     unsafe {
         vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero"));
+    }
+
+    loop {}
+}
+
+// Page fault
+fn exept_0E() {
+    unsafe {
+        vga_buffer::print_error(format_args!("EXCEPTION: Page fault"));
     }
 
     loop {}
@@ -156,8 +167,8 @@ fn divide_by_zero_handler() {
 
 // Handler for IRQ0 - the PIT interrupt
 fn irq0_handler() {
-    let mut scheduler = schedule::SCHEDULER.lock();
-    scheduler.get_timer_mut().tick();
+    let ref mut scheduler = unsafe { &mut *kget().scheduler.get() };
+    scheduler.tick();
     PIC.send_end_of_interrupt(0);
 }
 
