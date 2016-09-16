@@ -11,7 +11,7 @@ pub fn init() {
     }
 
     let mut scheduler = unsafe { &mut *kget().scheduler.get() };
-    scheduler.schedule(ticktock, 10);
+    //scheduler.schedule(ticktock, 100);
 }
 
 pub fn ticktock() {

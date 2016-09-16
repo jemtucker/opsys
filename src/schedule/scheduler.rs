@@ -22,6 +22,11 @@ impl Scheduler {
         }
 
         self.timers = new_timers;
+//        let count = self.timers.len();
+//
+//        for i in 0..count {
+//            self.timers[i].tick();
+//        }
     }
 
     pub fn schedule(&mut self, what: fn(), when: usize) {

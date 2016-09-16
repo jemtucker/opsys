@@ -1,5 +1,6 @@
 mod idt;
 mod pic;
+mod exception;
 
 use x86;
 use core::intrinsics;
@@ -8,7 +9,24 @@ use vga_buffer;
 
 use kernel::kget;
 
-macro_rules! add_handler {
+use self::exception::Exception;
+use self::exception::ExceptionWithError;
+
+macro_rules! add_exp_handler {
+    ($idt:expr, $int:expr, $handler:ident) => {{
+        #[naked]
+        extern "C" fn isr() -> ! { unsafe {
+            asm!("mov rdi, rsp
+                  call $0
+                  iretq" :: "s"($handler as fn(_)) : "rdi" : "volatile", "intel");
+            intrinsics::unreachable();
+        }}
+
+        $idt.set_handler($int, isr);
+    }};
+}
+
+macro_rules! add_irq_handler {
     ($idt:expr, $int:expr, $handler:ident) => {{
         #[naked]
         extern "C" fn isr() -> ! { unsafe {
@@ -68,7 +86,7 @@ macro_rules! default_handler {
             loop {}
         }
 
-        add_handler!($idt, $int, handler);
+        add_irq_handler!($idt, $int, handler);
     }}
 }
 
@@ -78,7 +96,7 @@ lazy_static! {
 
         // Set all the handlers. Set default handler if a specific is not defined
         // to help debugging
-        add_handler!(idt, 0, exept_00);
+        add_exp_handler!(idt, 0, exept_00);
         default_handler!(idt, 1);
         default_handler!(idt, 2);
         default_handler!(idt, 3);
@@ -92,7 +110,7 @@ lazy_static! {
         default_handler!(idt, 11);
         default_handler!(idt, 12);
         default_handler!(idt, 13);
-        add_handler!(idt, 14, exept_0E);
+        add_exp_handler!(idt, 14, exept_14);
         default_handler!(idt, 15);
         default_handler!(idt, 16);
         default_handler!(idt, 17);
@@ -110,8 +128,8 @@ lazy_static! {
         default_handler!(idt, 29);
         default_handler!(idt, 30);
         default_handler!(idt, 31);
-        add_handler!(idt, 32, irq0_handler); // IRQ 0
-        add_handler!(idt, 33, irq1_handler); // IRQ 1
+        add_irq_handler!(idt, 32, irq0_handler); // IRQ 0
+        add_irq_handler!(idt, 33, irq1_handler); // IRQ 1
         default_handler!(idt, 34); // IRQ 3
         default_handler!(idt, 35); // IRQ 4
         default_handler!(idt, 36); // IRQ 5
@@ -145,20 +163,28 @@ pub fn init() {
 
 // Some handlers...
 
+
+
 // Divide by zero
-fn exept_00() {
+fn exept_00(exception: *const Exception) {
     unsafe {
-        vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero"));
-    }
+        vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero\n{:#?}", *exception));
+    };
 
     loop {}
 }
 
 // Page fault
-fn exept_0E() {
+fn exept_14(exception: *const ExceptionWithError) {
+
     unsafe {
-        vga_buffer::print_error(format_args!("EXCEPTION: Page fault"));
-    }
+        vga_buffer::print_error(format_args!("EXCEPTION: Page Fault\n{:#?}", *exception));
+
+        let code = (*exception).error_code;
+        let err = x86::irq::PageFaultError::from_bits(code);
+
+        vga_buffer::print_error(format_args!("{:#?}", err));
+    };
 
     loop {}
 }
