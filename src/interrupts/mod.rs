@@ -11,11 +11,14 @@ use kernel::kget;
 
 use self::exception::Exception;
 use self::exception::ExceptionWithError;
+use self::exception::PageFaultErrorCode;
 
 macro_rules! add_exp_handler {
     ($idt:expr, $int:expr, $handler:ident) => {{
         #[naked]
         extern "C" fn isr() -> ! { unsafe {
+            // TODO - Currently the error code (if present) is left on the stack. We need to pop
+            //        this off before returning to normal execution if the exception can be handled.
             asm!("mov rdi, rsp
                   call $0
                   iretq" :: "s"($handler as fn(_)) : "rdi" : "volatile", "intel");
@@ -178,12 +181,15 @@ fn exept_00(exception: *const Exception) {
 fn exept_14(exception: *const ExceptionWithError) {
 
     unsafe {
-        vga_buffer::print_error(format_args!("EXCEPTION: Page Fault\n{:#?}", *exception));
-
         let code = (*exception).error_code;
-        let err = x86::irq::PageFaultError::from_bits(code);
+        let err = PageFaultErrorCode::from_bits(code);
 
-        vga_buffer::print_error(format_args!("{:#?}", err));
+        vga_buffer::print_error(format_args!(
+            "EXCEPTION: Page Fault accessing {:#x} \nerror code: {:?}\n{:#?}",
+            x86::controlregs::cr2(),
+            err.unwrap(),
+            *exception));
+
     };
 
     loop {}

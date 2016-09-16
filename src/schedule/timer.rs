@@ -16,7 +16,7 @@ impl Timer {
     // and runs its internal function
     pub fn tick(&mut self) -> bool {
         if self.counter != 0 {
-            //self.counter -= 1; // This line causes a page fault at the moment?
+            self.counter -= 1; // This line causes a page fault at the moment?
 
             let finished = self.counter < 1;
             if finished {
