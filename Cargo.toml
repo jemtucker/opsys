@@ -25,5 +25,5 @@ git = "https://github.com/phil-opp/multiboot2-elf64"
 version = "0.7.0"
 default-features = false
 
-[dependencies.jem_alloc]
-path = "libs/jem_alloc"
+[dependencies.alloc_push]
+path = "libs/alloc_push"

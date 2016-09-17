@@ -54,6 +54,9 @@ run: target/os.iso
 	qemu-system-x86_64 -cdrom target/os.iso
 
 debug: target/os.iso
+	qemu-system-x86_64 -cdrom target/os.iso -s
+
+debugstop: target/os.iso
 	qemu-system-x86_64 -cdrom target/os.iso -s -S
 
 clean: 

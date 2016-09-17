@@ -6,6 +6,8 @@
 #![feature(core_intrinsics)]
 #![feature(naked_functions)]
 #![feature(collections)]
+#![feature(drop_types_in_const)]
+#![feature(box_syntax)]
 
 #![no_std]
 
@@ -14,7 +16,7 @@ extern crate x86;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
-extern crate jem_alloc;
+extern crate alloc_push;
 extern crate alloc;
 
 #[macro_use]
@@ -32,25 +34,25 @@ mod memory;
 mod interrupts;
 mod drivers;
 mod io;
+mod schedule;
+mod kernel;
 
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention
 #[no_mangle]
 pub extern fn kernel_main(multiboot_info_address: usize) {
+    // Initialise the hardware
+    init_cpu();
+    memory::init(multiboot_info_address);
+
+    // Setup the kernel
+    kernel::init();
+
+    // Initialize interrupts
+    interrupts::init();
 
     vga_buffer::clear_screen();
     kprintln!("OpSys v{}", "0.0.1");
-
-    init_cpu();
-    memory::init(multiboot_info_address);
-    interrupts::init();
-
-    kprintln!("It did not crash!");
-
-    use alloc::boxed::Box;
-    let heap_test = Box::new(123);
-
-    kprintln!("It still did not crash! {}", heap_test);
 
 	loop { }
 }
