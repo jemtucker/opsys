@@ -11,11 +11,11 @@ pub fn init() {
     }
 
     let mut scheduler = unsafe { &mut *kget().scheduler.get() };
-    scheduler.schedule(ticktock, 100);
+    scheduler.schedule(hello_world, 100);
 }
 
-pub fn ticktock() {
-    kprintln!("TickTock!");
+fn hello_world() {
+    unsafe { ::vga_buffer::print_error(format_args!("Hello World!")); };
 }
 
 pub fn kget() -> &'static Kernel {

@@ -1,35 +1,31 @@
 use super::timer::Timer;
-use collections::vec::Vec;
+use collections::linked_list::LinkedList;
 
 pub struct Scheduler {
-    timers: Vec<Timer>
+    timers: LinkedList<Timer>,
 }
 
 impl Scheduler {
     pub fn new() -> Scheduler {
         Scheduler {
-            timers: Vec::new()
+            timers: LinkedList::new(),
         }
     }
 
     pub fn tick(&mut self) {
-        let mut new_timers: Vec<Timer> = Vec::new();
+        let mut new_timers = LinkedList::new();
 
-        for mut timer in self.timers.iter_mut() {
+        for i in 0..self.timers.len() {
+            let mut timer = self.timers.pop_front().unwrap();
             if !timer.tick() {
-                new_timers.push(timer.clone());
+                new_timers.push_front(timer);
             }
         }
 
         self.timers = new_timers;
-//        let count = self.timers.len();
-//
-//        for i in 0..count {
-//            self.timers[i].tick();
-//        }
     }
 
     pub fn schedule(&mut self, what: fn(), when: usize) {
-        self.timers.push(Timer::new(what, when));
+        self.timers.push_front(Timer::new(what, when));
     }
 }

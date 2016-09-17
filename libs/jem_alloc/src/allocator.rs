@@ -1,4 +1,5 @@
 const MIN_BLOCK_SIZE: usize = 16;
+const HEADER_SIZE: usize = 16;
 
 pub struct Allocator {
     heap_start: usize,
@@ -32,11 +33,11 @@ impl Allocator {
     pub fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
         // All we do for now is set the block header flag.
         // TODO - We need to handle merging
-        let header = ptr as *mut usize;
+        //let header = ptr as *mut usize;
 
         unsafe {
-            assert!(block_size(*header) == size);
-            *header = dealloc_header(*header);
+            //assert!(block_size(*header) == size);
+            //*header = dealloc_header(*header);
         }
     }
 
@@ -85,11 +86,15 @@ impl Allocator {
     }
 
     fn allocate_position(&self, size: usize) {
-        let header = alloc_header(size);
+        // Perform the allocation
+        let header = alloc_header(size + HEADER_SIZE);
         let position = self.position as *mut usize;
         unsafe {
             *position = header;
         }
+
+        // Push the position pointer past the header
+        self.position + HEADER_SIZE;
     }
 
 }

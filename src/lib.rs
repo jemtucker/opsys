@@ -16,7 +16,7 @@ extern crate x86;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
-extern crate jem_alloc;
+extern crate alloc_push;
 extern crate alloc;
 
 #[macro_use]
