@@ -6,6 +6,7 @@
 
 extern crate spin;
 
+mod block;
 mod allocator;
 
 use spin::Mutex;
