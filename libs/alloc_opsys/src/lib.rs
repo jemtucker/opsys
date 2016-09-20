@@ -21,8 +21,7 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
 #[cfg(not(test))]
 #[no_mangle]
 pub extern fn __rust_usable_size(size: usize, align: usize) -> usize {
-    // TODO
-    size
+    unimplemented!();
 }
 
 #[cfg(not(test))]
@@ -43,8 +42,7 @@ pub extern fn __rust_reallocate(ptr: *mut u8, size: usize, new_size: usize,
 pub extern fn __rust_reallocate_inplace(ptr: *mut u8, size: usize,
                                         new_size: usize, align: usize)
                                         -> usize {
-    // Unsupported so just return size
-    size
+    unimplemented!();
 }
 
 #[cfg(test)]

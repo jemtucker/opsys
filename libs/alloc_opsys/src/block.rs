@@ -1,10 +1,10 @@
 
 
 pub struct Block {
-    prev: Option<*mut Block>,
-    next: Option<*mut Block>,
-    size: usize,
-    free: bool,
+    pub prev: Option<*mut Block>,
+    pub next: Option<*mut Block>,
+    pub size: usize,
+    pub free: bool,
 }
 
 impl Block {
