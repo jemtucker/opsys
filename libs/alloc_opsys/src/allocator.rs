@@ -4,9 +4,6 @@ fn header_size() -> isize {
     ::core::mem::size_of::<Block>() as isize
 }
 
-
-const MIN_HEAP_SIZE: usize = 1000;
-
 pub struct Allocator {
     heap: &'static mut [u8],
     size: usize,
@@ -18,7 +15,7 @@ impl Allocator {
 
     // Create a new Allocator for a given heap. The heap must be at-least 1000 bytes.
     pub fn new(heap: &'static mut [u8], size: usize) -> Allocator {
-        assert!(size > MIN_HEAP_SIZE);
+        assert!(size > header_size() as usize);
 
         let mut block = unsafe {
             let mut b = (&mut heap[0] as *mut u8) as *mut Block;
@@ -29,7 +26,6 @@ impl Allocator {
             b
         };
 
-
         Allocator {
             heap: heap,
             size: size,
@@ -39,30 +35,25 @@ impl Allocator {
     }
 
     // Allocate 'size' byes
-    pub fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
+    pub unsafe fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
+
         // TODO calculate size from alignment
-        let mut next_block = unsafe {
-            let offset = header_size() + (*self.block_tail).size as isize;
-            let mut b = self.block_tail.offset(offset as isize);
-            (*b).prev = Some(self.block_tail);
-            (*b).next = None;
-            (*b).size = 0;
-            (*b).free = true;
-            b
-        };
 
-        unsafe {
-            (*self.block_tail).next = Some(next_block);
-            (*self.block_tail).size = size;
-            (*self.block_tail).free = false;
-        }
+        let offset = header_size() + (*self.block_tail).size as isize;
+        let mut next_block = self.block_tail.offset(offset as isize);
+        (*next_block).prev = Some(self.block_tail);
+        (*next_block).next = None;
+        (*next_block).size = 0;
+        (*next_block).free = true;
 
-        unsafe {
-            Some(self.block_tail.offset(header_size()) as *mut u8)
-        }
+        (*self.block_tail).next = Some(next_block);
+        (*self.block_tail).size = size;
+        (*self.block_tail).free = false;
+
+        Some(self.block_tail.offset(header_size()) as *mut u8)
     }
 
-    pub fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
+    pub unsafe fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
         unimplemented!();
     }
 

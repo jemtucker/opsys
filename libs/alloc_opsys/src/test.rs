@@ -1,11 +1,13 @@
 use super::allocator::Allocator;
 
-static TEST_HEAP: [u8; 1000] = [0; 1000];
+static mut TEST_HEAP: [u8; 1000] = [0; 1000];
 
 #[test]
 fn allocation_works() {
-    let allocator = Allocator::new(&TEST_HEAP, 1000);
-    let _ = allocator.alloc(10, 0);
+    unsafe {
+        let mut allocator = Allocator::new(&mut TEST_HEAP, 1000);
+        let ptr1 = allocator.alloc(10, 0);
+    }
 }
 
 #[test]
