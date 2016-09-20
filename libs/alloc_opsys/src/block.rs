@@ -1,21 +1,31 @@
+
+
 pub struct Block {
-    prev: *u8,
-    next: *u8,
+    prev: Option<*mut Block>,
+    next: Option<*mut Block>,
     size: usize,
     free: bool,
 }
 
 impl Block {
-    pub fn alloc_new(size: usize, prev: *u8, next: *u8) -> Block {
-        // TODO
-    }
 
     pub fn free(&mut self) {
         // TODO
     }
 
-    pub fn merge_next(&mut self) {
-        self.size = self.next.size;
-        self.next = self.next.next;
+    pub unsafe fn merge_next(&mut self) {
+        match self.next {
+            Some(next) => {
+                self.size = (*next).size;
+                self.next = (*next).next;
+            }
+            None => {}
+        };
+    }
+
+    pub unsafe fn data_pointer(&mut self) -> *mut u8 {
+        let header_size = ::core::mem::size_of::<Block>() as isize;
+        let mut self_ptr = self as *mut Block;
+        self_ptr.offset(header_size) as *mut u8
     }
 }
