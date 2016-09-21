@@ -11,6 +11,14 @@ fn allocation_works() {
 }
 
 #[test]
+fn panics_on_oom() {
+    unsafe {
+        let mut allocator = Allocator::new(&mut TEST_HEAP, 1000);
+        let ptr1 = allocator.alloc(1001, 0);
+    }
+}
+
+#[test]
 fn deallocation_works() {
     // TODO
 }

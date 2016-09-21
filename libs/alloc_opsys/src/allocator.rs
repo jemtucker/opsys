@@ -1,27 +1,37 @@
 use ::block::Block;
 
-fn header_size() -> isize {
-    ::core::mem::size_of::<Block>() as isize
-}
+use ::core::mem::size_of;
+
+//const MIN_ALLOCATION: usize = 1;
+//const MIN_BLOCK_SIZE: usize = size_of::<Block>() + MIN_ALLOCATION;
+const MIN_BLOCK_SIZE: usize = 32;
+
+// WIP NOTES...
+// 1. Start with one massive block, break this up with every allocation. Walk for first fit.
+// 2. Deallocate just flag as free
+// 3. Merge free neighbours? - Maybe a GC function that runs periodically??
+//
+//
+//
 
 pub struct Allocator {
     heap: &'static mut [u8],
     size: usize,
-    block_head: *mut Block,
-    block_tail: *mut Block
+    block_head: *mut Block
 }
 
 impl Allocator {
 
-    // Create a new Allocator for a given heap. The heap must be at-least 1000 bytes.
+    // Create a new Allocator for a given heap. The heap must be at-least the size of a block
+    // header.
     pub fn new(heap: &'static mut [u8], size: usize) -> Allocator {
-        assert!(size > header_size() as usize);
+        assert!(size > size_of::<Block>());
 
         let mut block = unsafe {
             let mut b = (&mut heap[0] as *mut u8) as *mut Block;
             (*b).prev = None;
             (*b).next = None;
-            (*b).size = 0;
+            (*b).size = size - size_of::<Block>();
             (*b).free = true;
             b
         };
@@ -29,28 +39,54 @@ impl Allocator {
         Allocator {
             heap: heap,
             size: size,
-            block_head: block,
-            block_tail: block
+            block_head: block
         }
     }
 
     // Allocate 'size' byes
     pub unsafe fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
 
-        // TODO calculate size from alignment
+        // TODO implement the alignment side of things
 
-        let offset = header_size() + (*self.block_tail).size as isize;
-        let mut next_block = self.block_tail.offset(offset as isize);
-        (*next_block).prev = Some(self.block_tail);
-        (*next_block).next = None;
-        (*next_block).size = 0;
-        (*next_block).free = true;
+        // Find the next fitting block
+        let mut block_head = self.block_head;
+        let mut block_ptr = self.next_fit(size, block_head);
 
-        (*self.block_tail).next = Some(next_block);
-        (*self.block_tail).size = size;
-        (*self.block_tail).free = false;
+        let mut block = block_ptr.as_mut().expect("Null Block Pointer");
+        // Found a block. We now need to see how big it is. If after allocation it is going to
+        // leave unused memory larger than MIN_BLOCK_SIZE then we chunk it up and create a new
+        // free block in the space.
+        if (block.size - size) >= MIN_BLOCK_SIZE {
+            let next_block_size = block.size - size - (size_of::<Block>() * 2);
 
-        Some(self.block_tail.offset(header_size()) as *mut u8)
+            block.size = size;
+            let mut next_block = block.next_ptr();
+            block.next = Some(next_block);
+
+            (*next_block).size = next_block_size;
+            (*next_block).prev = Some(block as *mut Block);
+            (*next_block).next = block.next;
+
+        }
+
+        // Finally we mark the allocated block as used and return the data_pointer to the caller
+        block.free = false;
+        Some(block.data_pointer())
+    }
+
+    fn next_fit(&mut self, size: usize, current: *mut Block) -> *mut Block {
+        let current_ref = unsafe { current.as_ref().expect("Null Block Pointer") };
+
+        if current_ref.free && current_ref.size >= size {
+            current
+        } else {
+            let mut block = match current_ref.next {
+                Some(next) => next,
+                None => panic!("Out Of Memory"),
+            };
+
+            self.next_fit(size, block)
+        }
     }
 
     pub unsafe fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
