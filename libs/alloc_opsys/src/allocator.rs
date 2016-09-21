@@ -76,7 +76,7 @@ impl Allocator {
         Some(alloc_pointer)
     }
 
-    pub unsafe fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
+    pub fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
         unimplemented!();
     }
 
