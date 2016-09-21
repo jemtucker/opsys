@@ -44,7 +44,7 @@ impl Allocator {
     }
 
     // Allocate 'size' byes
-    pub unsafe fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
+    pub fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
 
         // TODO implement the alignment side of things
 
@@ -52,7 +52,7 @@ impl Allocator {
         let mut block_head = self.block_head;
         let mut block_ptr = self.next_fit(size, block_head);
 
-        let mut block = block_ptr.as_mut().expect("Null Block Pointer");
+        let mut block = unsafe { block_ptr.as_mut().expect("Null Block Pointer") };
         // Found a block. We now need to see how big it is. If after allocation it is going to
         // leave unused memory larger than MIN_BLOCK_SIZE then we chunk it up and create a new
         // free block in the space.
@@ -60,33 +60,20 @@ impl Allocator {
             let next_block_size = block.size - size - (size_of::<Block>() * 2);
 
             block.size = size;
-            let mut next_block = block.next_ptr();
+            let mut next_block = unsafe { block.next_ptr() };
             block.next = Some(next_block);
 
-            (*next_block).size = next_block_size;
-            (*next_block).prev = Some(block as *mut Block);
-            (*next_block).next = block.next;
-
+            unsafe {
+                (*next_block).size = next_block_size;
+                (*next_block).prev = Some(block as *mut Block);
+                (*next_block).next = block.next;
+            }
         }
 
         // Finally we mark the allocated block as used and return the data_pointer to the caller
         block.free = false;
-        Some(block.data_pointer())
-    }
-
-    fn next_fit(&mut self, size: usize, current: *mut Block) -> *mut Block {
-        let current_ref = unsafe { current.as_ref().expect("Null Block Pointer") };
-
-        if current_ref.free && current_ref.size >= size {
-            current
-        } else {
-            let mut block = match current_ref.next {
-                Some(next) => next,
-                None => panic!("Out Of Memory"),
-            };
-
-            self.next_fit(size, block)
-        }
+        let mut alloc_pointer = unsafe { block.data_pointer() };
+        Some(alloc_pointer)
     }
 
     pub unsafe fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
@@ -105,5 +92,20 @@ impl Allocator {
     pub fn realloc_inplace(&mut self, ptr: *mut u8, size: usize,
         new_size: usize, align: usize) -> usize {
         unimplemented!();
+    }
+
+    fn next_fit(&mut self, size: usize, current: *mut Block) -> *mut Block {
+        let current_ref = unsafe { current.as_ref().expect("Null Block Pointer") };
+
+        if current_ref.free && current_ref.size >= size {
+            current
+        } else {
+            let mut block = match current_ref.next {
+                Some(next) => next,
+                None => panic!("Out Of Memory"),
+            };
+
+            self.next_fit(size, block)
+        }
     }
 }

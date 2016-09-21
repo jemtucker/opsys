@@ -11,6 +11,7 @@ fn allocation_works() {
 }
 
 #[test]
+#[should_panic(expected = "Out Of Memory")]
 fn panics_on_oom() {
     unsafe {
         let mut allocator = Allocator::new(&mut TEST_HEAP, 1000);
