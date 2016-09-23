@@ -34,8 +34,8 @@ impl Block {
     }
 
     pub unsafe fn data_pointer(&mut self) -> *mut u8 {
-        let offset = size_of::<Block>() as isize;
+        //let offset = size_of::<Block>() as isize;
         let mut self_ptr = self as *mut Block;
-        self_ptr.offset(offset) as *mut u8
+        self_ptr.offset(1) as *mut u8
     }
 }

@@ -85,16 +85,30 @@ impl Allocator {
     }
 
     pub fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
-        unimplemented!();
+        let mut block = unsafe { get_block_ptr(ptr) };
+
+        // This is only for the unit tests...
+        debug_assert!(block.size == size);
+
+        // Set the block as free
+        block.free = true;
+
+        // TODO Merge neighbours.
     }
 
     pub fn usable_size(&mut self, size: usize, align: usize) -> usize {
-        unimplemented!();
+        // TODO Implement this properly...
+        size
     }
 
-    pub fn realloc(&mut self, ptr: *mut u8, size: usize,
-        new_size: usize, align: usize) -> *mut u8 {
-        unimplemented!();
+    pub fn realloc(&mut self, ptr: *mut u8, size: usize, new_size: usize,
+        align: usize) -> Option<*mut u8> {
+        // TODO We should check here wether the new size is smaller, if so maybe just return the
+        // original pointer?
+
+        self.dealloc(ptr, size, align);
+
+        self.alloc(new_size, align)
     }
 
     pub fn realloc_inplace(&mut self, ptr: *mut u8, size: usize,
@@ -116,4 +130,11 @@ impl Allocator {
             self.next_fit(size, block)
         }
     }
+
+}
+
+// Get a pointer to the block that is encapsulating a given u8 pointer
+unsafe fn get_block_ptr<'a>(ptr: *mut u8) -> &'a mut Block {
+    let mut block_ptr = ptr.offset(-(size_of::<Block>() as isize)) as *mut Block;
+    block_ptr.as_mut().expect("Null Block Pointer")
 }
