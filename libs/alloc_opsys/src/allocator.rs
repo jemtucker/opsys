@@ -56,7 +56,7 @@ impl Allocator {
         // leave unused memory larger than MIN_BLOCK_SIZE then we chunk it up and create a new
         // free block in the space.
         if (block.size - size) >= MIN_BLOCK_SIZE {
-            let next_block_size = block.size - size - (size_of::<Block>() * 2);
+            let next_block_size = block.size - size - size_of::<Block>();
 
             // The order of the next steps are crucial...
 
@@ -71,6 +71,7 @@ impl Allocator {
                 (*next_block).size = next_block_size;
                 (*next_block).prev = Some(block as *mut Block);
                 (*next_block).next = block.next;
+                (*next_block).free = true;
             }
 
             // Finally set the allocated block to point to our new block and complete the chain.
