@@ -26,7 +26,6 @@ impl Allocator {
     // header.
     pub fn new(heap: &'static mut [u8], size: usize) -> Allocator {
         assert!(size > size_of::<Block>());
-
         let mut block = unsafe {
             let mut b = (&mut heap[0] as *mut u8) as *mut Block;
             (*b).prev = None;
@@ -51,23 +50,31 @@ impl Allocator {
         // Find the next fitting block
         let mut block_head = self.block_head;
         let mut block_ptr = self.next_fit(size, block_head);
-
         let mut block = unsafe { block_ptr.as_mut().expect("Null Block Pointer") };
+
         // Found a block. We now need to see how big it is. If after allocation it is going to
         // leave unused memory larger than MIN_BLOCK_SIZE then we chunk it up and create a new
         // free block in the space.
         if (block.size - size) >= MIN_BLOCK_SIZE {
             let next_block_size = block.size - size - (size_of::<Block>() * 2);
 
-            block.size = size;
-            let mut next_block = unsafe { block.next_ptr() };
-            block.next = Some(next_block);
+            // The order of the next steps are crucial...
 
+            // Set block to allocate size
+            block.size = size;
+
+            // Get a pointer to the next block and set it to point to whatever the original 'next'
+            // was. This is because we are slotting this block in between the allocated block
+            // and its neighbour.
+            let mut next_block = unsafe { block.next_ptr() };
             unsafe {
                 (*next_block).size = next_block_size;
                 (*next_block).prev = Some(block as *mut Block);
                 (*next_block).next = block.next;
             }
+
+            // Finally set the allocated block to point to our new block and complete the chain.
+            block.next = Some(next_block);
         }
 
         // Finally we mark the allocated block as used and return the data_pointer to the caller

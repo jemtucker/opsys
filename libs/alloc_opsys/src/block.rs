@@ -17,7 +17,10 @@ impl Block {
     // pointer after the size of this block.
     pub unsafe fn next_ptr(&mut self) -> *mut Block {
         let offset = (size_of::<Block>() + self.size) as isize;
-        (self as *mut Block).offset(offset)
+
+        // Be sure to cast to byte before adding offset to point to the next block. This is
+        // because offset increments per size_of<struct>...
+        ((self as *mut Block) as *mut u8).offset(offset) as *mut Block
     }
 
     pub unsafe fn merge_next(&mut self) {

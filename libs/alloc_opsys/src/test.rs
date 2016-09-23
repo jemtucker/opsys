@@ -7,7 +7,7 @@ static mut TEST_HEAP: [u8; 1000] = [0; 1000];
 #[test]
 fn alloc_0() {
     let mut allocator = unsafe { Allocator::new(&mut TEST_HEAP, 1000) };
-    let _ = allocator.alloc(10, 0);
+    let _ = allocator.alloc(26, 0);
 }
 
 #[test]
