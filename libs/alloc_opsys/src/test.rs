@@ -68,11 +68,11 @@ fn dealloc_1() {
 
     // Allocate the entire heap in two allocs
     let p1 = allocator.alloc(size, 0);
-    let p2 = allocator.alloc(size, 0);
+    let _ = allocator.alloc(size, 0);
 
     // Deallocate the first
     allocator.dealloc(p1.unwrap(), size, 0);
 
     // Try to reallocate the same memory freed from p1
-    let p3 = allocator.alloc(size, 0);
+    let _ = allocator.alloc(size, 0);
 }

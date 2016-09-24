@@ -4,7 +4,7 @@ use ::core::mem::size_of;
 
 //const MIN_ALLOCATION: usize = 1;
 //const MIN_BLOCK_SIZE: usize = size_of::<Block>() + MIN_ALLOCATION;
-const MIN_BLOCK_SIZE: usize = 32;
+const MIN_BLOCK_SIZE: usize = 50;
 
 // WIP NOTES...
 // 1. Start with one massive block, break this up with every allocation. Walk for first fit.
@@ -15,8 +15,6 @@ const MIN_BLOCK_SIZE: usize = 32;
 //
 
 pub struct Allocator {
-    heap: &'static mut [u8],
-    size: usize,
     block_head: *mut Block
 }
 
@@ -24,9 +22,9 @@ impl Allocator {
 
     // Create a new Allocator for a given heap. The heap must be at-least the size of a block
     // header.
-    pub fn new(heap: &'static mut [u8], size: usize) -> Allocator {
+    pub fn new(heap: &mut [u8], size: usize) -> Allocator {
         assert!(size > size_of::<Block>());
-        let mut block = unsafe {
+        let block = unsafe {
             let mut b = (&mut heap[0] as *mut u8) as *mut Block;
             (*b).prev = None;
             (*b).next = None;
@@ -36,20 +34,18 @@ impl Allocator {
         };
 
         Allocator {
-            heap: heap,
-            size: size,
             block_head: block
         }
     }
 
     // Allocate 'size' byes
-    pub fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
+    pub fn alloc(&mut self, size: usize, _: usize) -> Option<*mut u8> {
 
         // TODO implement the alignment side of things
 
         // Find the next fitting block
-        let mut block_head = self.block_head;
-        let mut block_ptr = self.next_fit(size, block_head);
+        let block_head = self.block_head;
+        let block_ptr = self.next_fit(size, block_head);
         let mut block = unsafe { block_ptr.as_mut().expect("Null Block Pointer") };
 
         // Found a block. We now need to see how big it is. If after allocation it is going to
@@ -80,11 +76,11 @@ impl Allocator {
 
         // Finally we mark the allocated block as used and return the data_pointer to the caller
         block.free = false;
-        let mut alloc_pointer = unsafe { block.data_pointer() };
+        let alloc_pointer = unsafe { block.data_pointer() };
         Some(alloc_pointer)
     }
 
-    pub fn dealloc(&mut self, ptr: *mut u8, size: usize, align: usize) {
+    pub fn dealloc(&mut self, ptr: *mut u8, size: usize, _: usize) {
         let mut block = unsafe { get_block_ptr(ptr) };
 
         // This is only for the unit tests...
@@ -96,7 +92,7 @@ impl Allocator {
         // TODO Merge neighbours.
     }
 
-    pub fn usable_size(&mut self, size: usize, align: usize) -> usize {
+    pub fn usable_size(&mut self, size: usize, _: usize) -> usize {
         // TODO Implement this properly...
         size
     }
@@ -111,9 +107,10 @@ impl Allocator {
         self.alloc(new_size, align)
     }
 
-    pub fn realloc_inplace(&mut self, ptr: *mut u8, size: usize,
-        new_size: usize, align: usize) -> usize {
-        unimplemented!();
+    pub fn realloc_inplace(&mut self, _: *mut u8, size: usize,
+        _: usize, _: usize) -> usize {
+        // TODO Implement this properly...
+        size
     }
 
     fn next_fit(&mut self, size: usize, current: *mut Block) -> *mut Block {
@@ -122,7 +119,7 @@ impl Allocator {
         if current_ref.free && current_ref.size >= size {
             current
         } else {
-            let mut block = match current_ref.next {
+            let block = match current_ref.next {
                 Some(next) => next,
                 None => panic!("Out Of Memory"),
             };
@@ -135,6 +132,6 @@ impl Allocator {
 
 // Get a pointer to the block that is encapsulating a given u8 pointer
 unsafe fn get_block_ptr<'a>(ptr: *mut u8) -> &'a mut Block {
-    let mut block_ptr = ptr.offset(-(size_of::<Block>() as isize)) as *mut Block;
+    let block_ptr = ptr.offset(-(size_of::<Block>() as isize)) as *mut Block;
     block_ptr.as_mut().expect("Null Block Pointer")
 }
