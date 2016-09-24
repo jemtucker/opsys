@@ -10,23 +10,26 @@ mod allocator;
 extern crate spin;
 
 #[cfg(not(test))]
+pub const HEAP_START: usize = 0o_000_001_000_000_0000;
+
+#[cfg(not(test))]
+pub const HEAP_SIZE: usize = 100 * 1024; // 100 Kb
+
+#[cfg(not(test))]
 mod internal {
 
     use allocator::Allocator;
     use spin::Mutex;
     use core::slice::from_raw_parts_mut;
 
-    const HEAP_START: usize = 0o_000_001_000_000_0000;
-    const HEAP_SIZE: usize = 100 * 1024; // 100 Kb
-
     pub static mut ALLOCATOR: Option<Mutex<Allocator>> = None;
 
     pub fn _init() {
-        let heap_ptr = HEAP_START as *mut u8;
-        let mut heap: &mut [u8] = unsafe { from_raw_parts_mut::<u8>(heap_ptr, HEAP_SIZE) };
+        let heap_ptr = ::HEAP_START as *mut u8;
+        let mut heap: &mut [u8] = unsafe { from_raw_parts_mut::<u8>(heap_ptr, ::HEAP_SIZE) };
 
         unsafe {
-            ALLOCATOR = Some(Mutex::new(Allocator::new(heap, HEAP_SIZE)));
+            ALLOCATOR = Some(Mutex::new(Allocator::new(heap, ::HEAP_SIZE)));
         }
     }
 
