@@ -41,7 +41,7 @@ pub fn init(multiboot_info_address: usize) {
     let mut active_table = paging::remap_the_kernel(&mut frame_allocator, boot_info);
 
     use self::paging::Page;
-    use alloc_push::{HEAP_START, HEAP_SIZE};
+    use alloc_opsys::{HEAP_START, HEAP_SIZE};
 
     let heap_start_page = Page::containing_address(HEAP_START);
     let heap_end_page = Page::containing_address(HEAP_START + HEAP_SIZE-1);

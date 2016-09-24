@@ -8,4 +8,4 @@ matrix:
   allow_failures:
     - rust: nightly
 
-script: make cargo
+script: scripts/travis_build.sh

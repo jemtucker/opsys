@@ -25,5 +25,5 @@ git = "https://github.com/phil-opp/multiboot2-elf64"
 version = "0.7.0"
 default-features = false
 
-[dependencies.alloc_push]
-path = "libs/alloc_push"
+[dependencies.alloc_opsys]
+path = "libs/alloc_opsys"

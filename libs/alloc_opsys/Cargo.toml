@@ -1,5 +1,5 @@
 [package]
-name = "alloc_push"
+name = "alloc_opsys"
 version = "0.1.0"
 authors = ["Jem Tucker <jem.tucker@gmail.com>"]
 

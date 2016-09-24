@@ -16,7 +16,7 @@ extern crate x86;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
-extern crate alloc_push;
+extern crate alloc_opsys;
 extern crate alloc;
 
 #[macro_use]
@@ -44,6 +44,9 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
     // Initialise the hardware
     init_cpu();
     memory::init(multiboot_info_address);
+
+    // Setup the heap allocator
+    alloc_opsys::init();
 
     // Setup the kernel
     kernel::init();
@@ -81,7 +84,7 @@ fn enable_write_protect_bit() {
 }
 
 // For stack-unwinding, not supported currently
-#[lang = "eh_personality"] 
+#[lang = "eh_personality"]
 extern fn eh_personality() { }
 
 // For panic!
