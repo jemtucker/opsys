@@ -1,5 +1,7 @@
 language: rust
 
+cache: cargo
+
 rust:
   - nightly-2016-08-18
   - nightly
@@ -9,3 +11,15 @@ matrix:
     - rust: nightly
 
 script: scripts/travis_build.sh
+
+before_script:
+  - (cargo install xargo || true)
+  - PATH=$PATH:~/.cargo/bin
+
+addons:
+  apt:
+    packages:
+      - cmake
+      - libssl-dev
+    sources:
+      - kalakris-cmake

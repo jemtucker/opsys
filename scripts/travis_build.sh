@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
 
-# TODO Take this out its just to work out whats going on...
-pwd
-
 # Exit if anything fails...
 set -e
 
-#
-# Build
-#
-
 # Kernel
-make cargo
+make xargo
 
 #
 # Run Tests
