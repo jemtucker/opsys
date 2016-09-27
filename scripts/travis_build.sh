@@ -3,12 +3,8 @@
 # Exit if anything fails...
 set -e
 
-#
-# Build
-#
-
 # Kernel
-make cargo
+make xargo
 
 #
 # Run Tests
