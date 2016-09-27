@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
-# TODO Take this out its just to work out whats going on...
-pwd
-
 # Exit if anything fails...
 set -e
+
+#
+# Dependencies
+#
+cargo install xargo
 
 #
 # Build

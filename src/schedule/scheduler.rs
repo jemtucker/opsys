@@ -15,7 +15,7 @@ impl Scheduler {
     pub fn tick(&mut self) {
         let mut new_timers = LinkedList::new();
 
-        for i in 0..self.timers.len() {
+        for _ in 0..self.timers.len() {
             let mut timer = self.timers.pop_front().unwrap();
             if !timer.tick() {
                 new_timers.push_front(timer);
