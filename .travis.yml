@@ -10,6 +10,11 @@ matrix:
 
 script: scripts/travis_build.sh
 
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y cmake libssl-dev
+before_script:
+  - cargo install xargo
+
+addons:
+  apt:
+    packages:
+    - cmake
+    - libssl-dev

@@ -4,11 +4,6 @@
 set -e
 
 #
-# Dependencies
-#
-cargo install xargo
-
-#
 # Build
 #
 
