@@ -1,12 +1,8 @@
 language: rust
 
-rust:
-  - nightly-2016-08-18
-  - nightly
+rust: nightly
 
-matrix:
-  allow_failures:
-    - rust: nightly
+cache: cargo
 
 script: scripts/travis_build.sh
 
