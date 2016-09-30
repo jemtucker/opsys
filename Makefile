@@ -44,3 +44,6 @@ debugstop: target/os.iso
 
 clean:
 	xargo clean
+
+lldb:
+	rust-lldb "target/kernel.bin" -s "scripts/lldb_launch"
