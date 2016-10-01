@@ -104,7 +104,6 @@ fn exept_00(exception: *const Exception) {
 
 // Page fault
 fn exept_14(exception: *const ExceptionWithError) {
-
     unsafe {
         let code = (*exception).error_code;
         let err = PageFaultErrorCode::from_bits(code);
@@ -133,18 +132,9 @@ fn irq0_handler(context: *const TaskContext) {
             "{:?}", *context));
     }
 
+
     let ref mut scheduler = unsafe { &mut *kget().scheduler.get() };
     scheduler.tick();
-
-    unsafe {
-        vga_buffer::print_error(format_args!(
-            "Stack Pointer: {}", (context as usize)
-        ));
-
-        vga_buffer::print_error(format_args!(
-            "{:?}", *context));
-    }
-
 
     loop{}
     PIC.send_end_of_interrupt(0);

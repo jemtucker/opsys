@@ -84,9 +84,9 @@ macro_rules! add_irq_handler_1 {
                   push rcx
                   push rbx
                   push rax
-                  mov rsi, rsp
-                  push rsi
                   mov rdi, rsp
+                  push rdi
+                  sub rdi, 8
 
                   call $0
 
@@ -106,7 +106,7 @@ macro_rules! add_irq_handler_1 {
                   pop r14
                   pop r15
                   pop rbp
-                  iretq" :: "s"($handler as fn(_)) : "rdi" : "volatile", "intel");
+                  iretq" :: "s"($handler as fn(_)) :: "volatile", "intel");
             intrinsics::unreachable();
         }}
 
