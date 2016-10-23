@@ -11,7 +11,7 @@ pub fn init() {
     }
 
     let mut scheduler = unsafe { &mut *kget().scheduler.get() };
-    scheduler.schedule(hello_world, 100);
+    //scheduler.schedule(hello_world, 100);
 }
 
 fn hello_world() {

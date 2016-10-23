@@ -1,8 +1,6 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct TaskContext {
-    // Registers
-    // TODO swap order?
     pub rsp: u64,
     pub rax: u64,
     pub rbx: u64,
@@ -19,13 +17,27 @@ pub struct TaskContext {
     pub r14: u64,
     pub r15: u64,
     pub rbp: u64,
-
-    // TODO heap: usize?
-    //      stack: usize?
 }
 
-pub fn switch_context(old: &TaskContext, new: &TaskContext) {
-    // Store the old TaskContext somewhere then replace it with
-    // the new one. The interrupt should then automatically return
-    // into the new context (fingers crossed)
+impl TaskContext {
+    pub fn new() -> TaskContext {
+        TaskContext {
+            rsp: 0,
+            rax: 0,
+            rbx: 0,
+            rcx: 0,
+            rdx: 0,
+            rdi: 0,
+            rsi: 0,
+            r8:  0,
+            r9:  0,
+            r10: 0,
+            r11: 0,
+            r12: 0,
+            r13: 0,
+            r14: 0,
+            r15: 0,
+            rbp: 0,
+        }
+    }
 }

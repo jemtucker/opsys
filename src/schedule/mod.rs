@@ -1,5 +1,6 @@
 mod scheduler;
 mod timer;
+mod clock;
 
 pub mod task;
 
