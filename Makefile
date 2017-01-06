@@ -2,7 +2,7 @@ LINKER = $(HOME)/opt/bin/x86_64-pc-elf-ld
 ASSEMBLER = /usr/local/bin/nasm
 GRUB_MKRESCUE = $(HOME)/opt/bin/grub-mkrescue
 
-TARGET = x86_64-OpSys-target
+TARGET = x86_64-opsys
 
 default: build
 
@@ -22,7 +22,7 @@ target/long_mode.o: src/asm/long_mode.asm
 	$(ASSEMBLER) -f elf64 src/asm/long_mode.asm -o target/long_mode.o
 
 target/kernel.bin: target/multiboot_header.o target/boot.o target/long_mode.o src/asm/linker.ld xargo
-	$(LINKER) -n --gc-sections -o target/kernel.bin -T src/asm/linker.ld target/multiboot_header.o target/boot.o target/long_mode.o target/$(TARGET)/release/libOpSys.a
+	$(LINKER) -n --gc-sections -o target/kernel.bin -T src/asm/linker.ld target/multiboot_header.o target/boot.o target/long_mode.o target/$(TARGET)/release/libopsys.a
 
 target/os.iso: target/kernel.bin src/asm/grub.cfg
 	mkdir -p target/isofiles/boot/grub
