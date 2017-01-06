@@ -4,7 +4,7 @@
 set -e
 
 # Install rust source
-RUSTUP=~/rust-installer/rustup.sh
+RUSTUP=sh ~/rust-installer/rustup.sh
 $RUSTUP component add rust-src
 
 # Kernel
