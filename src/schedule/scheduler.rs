@@ -7,9 +7,7 @@ pub struct Scheduler {
 
 impl Scheduler {
     pub fn new() -> Scheduler {
-        Scheduler {
-            timers: LinkedList::new(),
-        }
+        Scheduler { timers: LinkedList::new() }
     }
 
     pub fn tick(&mut self) {

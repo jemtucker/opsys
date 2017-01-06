@@ -40,7 +40,7 @@ mod kernel;
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention
 #[no_mangle]
-pub extern fn kernel_main(multiboot_info_address: usize) {
+pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     // Initialise the hardware
     init_cpu();
     memory::init(multiboot_info_address);
@@ -57,7 +57,8 @@ pub extern fn kernel_main(multiboot_info_address: usize) {
     vga_buffer::clear_screen();
     kprintln!("OpSys v{}", "0.0.1");
 
-	loop { }
+    loop {
+    }
 }
 
 fn init_cpu() {
@@ -67,13 +68,13 @@ fn init_cpu() {
 }
 
 fn enable_nxe_bit() {
-	use x86::msr::{IA32_EFER, rdmsr, wrmsr};
+    use x86::msr::{IA32_EFER, rdmsr, wrmsr};
 
-	let nxe_bit = 1 << 11;
-	unsafe {
-		let efer = rdmsr(IA32_EFER);
-		wrmsr(IA32_EFER, efer | nxe_bit);
-	}
+    let nxe_bit = 1 << 11;
+    unsafe {
+        let efer = rdmsr(IA32_EFER);
+        wrmsr(IA32_EFER, efer | nxe_bit);
+    }
 }
 
 fn enable_write_protect_bit() {
@@ -85,20 +86,21 @@ fn enable_write_protect_bit() {
 
 // For stack-unwinding, not supported currently
 #[lang = "eh_personality"]
-extern fn eh_personality() { }
+extern "C" fn eh_personality() {}
 
 // For panic!
 #[lang = "panic_fmt"]
-extern fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
+extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
     kprintln!("\n\nPANIC in {} at line {}:", file, line);
     kprintln!("    {}", fmt);
 
     // Hang here.
-    loop { }
+    loop {
+    }
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern fn _Unwind_Resume() -> ! {
+pub extern "C" fn _Unwind_Resume() -> ! {
     loop {}
 }

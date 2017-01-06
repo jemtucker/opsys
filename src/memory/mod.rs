@@ -31,12 +31,18 @@ pub fn init(multiboot_info_address: usize) {
     let multiboot_start = multiboot_info_address;
     let multiboot_end = multiboot_start + (boot_info.total_size as usize);
 
-    kprintln!("kernel start: 0x{:x}, kernel end: 0x{:x}", kernel_start, kernel_end);
-    kprintln!("multiboot start: 0x{:x}, multiboot end: 0x{:x}", multiboot_start, multiboot_end);
+    kprintln!("kernel start: 0x{:x}, kernel end: 0x{:x}",
+              kernel_start,
+              kernel_end);
+    kprintln!("multiboot start: 0x{:x}, multiboot end: 0x{:x}",
+              multiboot_start,
+              multiboot_end);
 
-    let mut frame_allocator = AreaFrameAllocator::new(
-        kernel_start as usize, kernel_end as usize, multiboot_start,
-        multiboot_end, memory_map_tag.memory_areas());
+    let mut frame_allocator = AreaFrameAllocator::new(kernel_start as usize,
+                                                      kernel_end as usize,
+                                                      multiboot_start,
+                                                      multiboot_end,
+                                                      memory_map_tag.memory_areas());
 
     let mut active_table = paging::remap_the_kernel(&mut frame_allocator, boot_info);
 
@@ -44,7 +50,7 @@ pub fn init(multiboot_info_address: usize) {
     use alloc_opsys::{HEAP_START, HEAP_SIZE};
 
     let heap_start_page = Page::containing_address(HEAP_START);
-    let heap_end_page = Page::containing_address(HEAP_START + HEAP_SIZE-1);
+    let heap_end_page = Page::containing_address(HEAP_START + HEAP_SIZE - 1);
 
     for page in Page::range_inclusive(heap_start_page, heap_end_page) {
         active_table.map(page, paging::WRITABLE, &mut frame_allocator);
@@ -59,14 +65,14 @@ pub struct Frame {
 pub const PAGE_SIZE: usize = 4096;
 
 impl Frame {
-	// TODO change to from_address?
+    // TODO change to from_address?
     fn containing_address(address: usize) -> Frame {
-        Frame{ number: address / PAGE_SIZE }
+        Frame { number: address / PAGE_SIZE }
     }
 
     fn start_address(&self) -> PhysicalAddress {
-	    self.number * PAGE_SIZE
-	}
+        self.number * PAGE_SIZE
+    }
 
     fn clone(&self) -> Frame {
         Frame { number: self.number }
@@ -102,4 +108,4 @@ impl Iterator for FrameIter {
             None
         }
     }
- }
+}

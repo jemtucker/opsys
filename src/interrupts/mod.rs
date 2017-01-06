@@ -153,15 +153,17 @@ pub fn init() {
     // Enable some pic interrupts
     PIC.clear_mask(0);
     PIC.clear_mask(1);
-    //PIC.clear_mask(2);
-    //PIC.clear_mask(3);
-    //PIC.clear_mask(4);
-    //PIC.clear_mask(5);
+    // PIC.clear_mask(2);
+    // PIC.clear_mask(3);
+    // PIC.clear_mask(4);
+    // PIC.clear_mask(5);
 
     IDT.load();
 
     // Enable interrupts
-    unsafe { x86::irq::enable(); }
+    unsafe {
+        x86::irq::enable();
+    }
 }
 
 // Some handlers...
@@ -184,11 +186,11 @@ fn exept_14(exception: *const ExceptionWithError) {
         let code = (*exception).error_code;
         let err = PageFaultErrorCode::from_bits(code);
 
-        vga_buffer::print_error(format_args!(
-            "EXCEPTION: Page Fault accessing {:#x} \nerror code: {:?}\n{:#?}",
-            x86::controlregs::cr2(),
-            err.unwrap(),
-            *exception));
+        vga_buffer::print_error(format_args!("EXCEPTION: Page Fault accessing {:#x} \nerror \
+                                              code: {:?}\n{:#?}",
+                                             x86::controlregs::cr2(),
+                                             err.unwrap(),
+                                             *exception));
 
     };
 

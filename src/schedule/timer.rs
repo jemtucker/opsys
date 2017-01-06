@@ -1,14 +1,14 @@
 #[derive(Copy, Clone)]
 pub struct Timer {
     counter: usize,
-    function: fn()
+    function: fn(),
 }
 
 impl Timer {
     pub fn new(what: fn(), when: usize) -> Timer {
         Timer {
             counter: when,
-            function: what
+            function: what,
         }
     }
 
@@ -16,7 +16,9 @@ impl Timer {
     // and runs its internal function
     pub fn tick(&mut self) -> bool {
         if self.counter % 100 == 0 {
-            unsafe { ::vga_buffer::print_error(format_args!("Counter: {}", self.counter)); };
+            unsafe {
+                ::vga_buffer::print_error(format_args!("Counter: {}", self.counter));
+            };
         }
 
         if self.counter != 0 {

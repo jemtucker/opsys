@@ -1,7 +1,7 @@
 use x86::segmentation::{self, SegmentSelector};
 
 pub struct Idt {
-    table: [Entry; 255]
+    table: [Entry; 255],
 }
 
 impl Idt {
@@ -34,7 +34,7 @@ pub struct Entry {
     options: EntryOptions,
     pointer_middle: u16,
     pointer_high: u32,
-    reserved: u32
+    reserved: u32,
 }
 
 impl Entry {
