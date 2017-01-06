@@ -36,7 +36,11 @@ impl Page {
         }
     }
 
-    fn start_address(&self) -> usize {
+    pub fn next_page(&self) -> Page {
+        Page { number: self.number + 1 }
+    }
+
+    pub fn start_address(&self) -> usize {
         self.number * PAGE_SIZE
     }
 

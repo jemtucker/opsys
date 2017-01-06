@@ -37,13 +37,18 @@ mod io;
 mod schedule;
 mod kernel;
 
+use memory::MemoryManager;
+
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention
 #[no_mangle]
 pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     // Initialise the hardware
     init_cpu();
-    memory::init(multiboot_info_address);
+
+    // Initialise the memory paging and instantiate a new memory manager
+    let mut memory_manager = MemoryManager::new(multiboot_info_address);
+    //memory_manager.allocate_page();
 
     // Setup the heap allocator
     alloc_opsys::init();
@@ -55,7 +60,8 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     interrupts::init();
 
     vga_buffer::clear_screen();
-    kprintln!("OpSys v{}", "0.0.1");
+
+    kprintln!("opsys v{}", "0.0.1");
 
     loop {
     }
@@ -96,12 +102,12 @@ pub extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) ->
     kprintln!("    {}", fmt);
 
     // Hang here.
-    loop {
-    }
+    loop {}
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern "C" fn _Unwind_Resume() -> ! {
+    // Hang here.
     loop {}
 }
