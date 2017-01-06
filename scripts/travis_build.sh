@@ -4,7 +4,8 @@
 set -e
 
 # Install rust source
-rustup component add rust-src
+RUSTUP=~/rust-installer/rustup.sh
+$RUSTUP component add rust-src
 
 # Kernel
 make xargo
