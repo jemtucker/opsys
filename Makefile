@@ -47,3 +47,7 @@ clean:
 
 lldb:
 	rust-lldb "target/kernel.bin" -s "scripts/lldb_launch"
+
+fmt:
+	cargo fmt
+

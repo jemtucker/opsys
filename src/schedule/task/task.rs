@@ -3,7 +3,7 @@ use super::*;
 pub enum TaskStatus {
     RUNNING,
     WAITING,
-    READY
+    READY,
 }
 
 pub struct Task {
