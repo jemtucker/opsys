@@ -6,7 +6,7 @@ use memory::paging::ActivePageTable;
 pub struct MemoryManager {
     frame_allocator: AreaFrameAllocator,
     active_table: ActivePageTable,
-    next_page: Page
+    next_page: Page,
 }
 
 impl MemoryManager {
@@ -62,11 +62,32 @@ impl MemoryManager {
         MemoryManager {
             frame_allocator: frame_allocator,
             active_table: active_table,
-            next_page: next_page
+            next_page: next_page,
         }
     }
 
-    pub fn allocate_page(&mut self) -> usize {
+    pub fn allocate_pages_with_guard(&mut self, num: u8) -> usize {
+        // Allocate the pages
+        let start = self.allocate_pages(num);
+
+        // Allocate a guard page by skipping to the next page.
+        let next_page = self.next_page.next_page();
+        self.next_page = next_page;
+
+        start
+    }
+
+    fn allocate_pages(&mut self, num: u8) -> usize {
+        let start = self.allocate_page();
+        for _ in 1..num {
+            self.allocate_page();
+        }
+
+        // Return the start address of the page we just mapped
+        start
+    }
+
+    fn allocate_page(&mut self) -> usize {
         let next_page = self.next_page.next_page();
         let page = self.next_page;
         self.next_page = next_page;
@@ -74,7 +95,6 @@ impl MemoryManager {
         // Map the new page
         self.active_table.map(page, paging::WRITABLE, &mut self.frame_allocator);
 
-        // Return the start address of the page we just mapped
-        page.start_address()
+        self.next_page.start_address()
     }
 }

@@ -47,14 +47,13 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     init_cpu();
 
     // Initialise the memory paging and instantiate a new memory manager
-    let mut memory_manager = MemoryManager::new(multiboot_info_address);
-    //memory_manager.allocate_page();
+    let memory_manager = MemoryManager::new(multiboot_info_address);
 
     // Setup the heap allocator
     alloc_opsys::init();
 
     // Setup the kernel
-    kernel::init();
+    kernel::init(memory_manager);
 
     // Initialize interrupts
     interrupts::init();
