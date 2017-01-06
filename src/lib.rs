@@ -91,7 +91,7 @@ extern "C" fn eh_personality() {}
 // For panic!
 #[no_mangle]
 #[lang = "panic_fmt"]
-extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
+pub extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
     kprintln!("\n\nPANIC in {} at line {}:", file, line);
     kprintln!("    {}", fmt);
 
