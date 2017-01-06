@@ -3,6 +3,9 @@
 # Exit if anything fails...
 set -e
 
+# Install rust source
+rustup component add rust-src
+
 # Kernel
 make xargo
 
