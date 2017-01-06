@@ -12,30 +12,27 @@ pub struct TemporaryPage {
 }
 
 impl TemporaryPage {
+    pub fn new<A>(page: Page, allocator: &mut A) -> TemporaryPage
+        where A: FrameAllocator
+    {
+        TemporaryPage {
+            page: page,
+            allocator: TinyAllocator::new(allocator),
+        }
+    }
 
-	pub fn new<A>(page: Page, allocator: &mut A) -> TemporaryPage
-	    where A: FrameAllocator
-	{
-	    TemporaryPage {
-	        page: page,
-	        allocator: TinyAllocator::new(allocator),
-	    }
-	}
-
-	/// Maps the temporary page to the given page table frame in the active
-	/// table. Returns a reference to the now mapped table.
-	pub fn map_table_frame(&mut self, frame: Frame, 
-		active_table: &mut ActivePageTable) -> &mut Table<Level1> {
-	    unsafe { 
-	    	&mut *(self.map(frame, active_table) as *mut Table<Level1>) 
-	    }
-	}
+    /// Maps the temporary page to the given page table frame in the active
+    /// table. Returns a reference to the now mapped table.
+    pub fn map_table_frame(&mut self,
+                           frame: Frame,
+                           active_table: &mut ActivePageTable)
+                           -> &mut Table<Level1> {
+        unsafe { &mut *(self.map(frame, active_table) as *mut Table<Level1>) }
+    }
 
     /// Maps the temporary page to the given frame in the active table.
     /// Returns the start address of the temporary page.
-    pub fn map(&mut self, frame: Frame, active_table: &mut ActivePageTable)
-        -> VirtualAddress
-    {
+    pub fn map(&mut self, frame: Frame, active_table: &mut ActivePageTable) -> VirtualAddress {
         use super::entry::WRITABLE;
 
         assert!(active_table.translate_page(self.page).is_none(),

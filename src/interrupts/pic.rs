@@ -14,19 +14,21 @@ const PIC_READ_ISR: u8 = 0x0b;
 
 struct PicPort {
     com: io::Port,
-    data: io::Port
+    data: io::Port,
 }
 
 impl PicPort {
     pub const fn new(id: u16) -> PicPort {
         PicPort {
             com: io::Port::new(id),
-            data: io::Port::new(id + 1)
+            data: io::Port::new(id + 1),
         }
     }
 
     pub fn command(&self, byte: u8) {
-        unsafe { self.com.write(byte); }
+        unsafe {
+            self.com.write(byte);
+        }
     }
 
     pub fn result(&self) -> u8 {
@@ -34,7 +36,9 @@ impl PicPort {
     }
 
     pub fn write(&self, byte: u8) {
-        unsafe { self.data.write(byte); }
+        unsafe {
+            self.data.write(byte);
+        }
     }
 
     pub fn read(&self) -> u8 {
@@ -44,14 +48,14 @@ impl PicPort {
 
 pub struct Pic {
     pic1: PicPort,
-    pic2: PicPort
+    pic2: PicPort,
 }
 
 impl Pic {
     pub const fn new() -> Pic {
         Pic {
             pic1: PicPort::new(PIC1),
-            pic2: PicPort::new(PIC2)
+            pic2: PicPort::new(PIC2),
         }
     }
 
@@ -137,4 +141,3 @@ impl Pic {
         reg1 as u16 | ((reg2 as u16) << 8)
     }
 }
-

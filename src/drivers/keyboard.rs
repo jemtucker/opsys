@@ -8,7 +8,7 @@ pub struct Keyboard {
     caps: bool,
     shift: u8,
     ctrl: u8,
-    alt: u8
+    alt: u8,
 }
 
 impl Keyboard {
@@ -18,7 +18,7 @@ impl Keyboard {
             caps: false,
             shift: 0,
             ctrl: 0,
-            alt: 0
+            alt: 0,
         }
     }
 
@@ -27,11 +27,7 @@ impl Keyboard {
         let code = unsafe {
             let c = self.port.read();
 
-            if c == 0xEA {
-                self.port.read()
-            } else {
-                c
-            }
+            if c == 0xEA { self.port.read() } else { c }
         };
 
         match code {
@@ -42,7 +38,9 @@ impl Keyboard {
             0x38 => self.alt += 1,
             0xB8 => self.alt -= 1,
             0x3A => self.caps = !self.caps,
-            _ => { let _ = self.get_char(code); }
+            _ => {
+                let _ = self.get_char(code);
+            }
         }
     }
 

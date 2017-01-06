@@ -15,7 +15,9 @@ pub fn init() {
 }
 
 fn hello_world() {
-    unsafe { ::vga_buffer::print_error(format_args!("Hello World!")); };
+    unsafe {
+        ::vga_buffer::print_error(format_args!("Hello World!"));
+    };
 }
 
 pub fn kget() -> &'static Kernel {
@@ -33,8 +35,6 @@ pub struct Kernel {
 
 impl Kernel {
     pub fn new() -> Kernel {
-        Kernel {
-            scheduler: UnsafeCell::new(Scheduler::new())
-        }
+        Kernel { scheduler: UnsafeCell::new(Scheduler::new()) }
     }
 }

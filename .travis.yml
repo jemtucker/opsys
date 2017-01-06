@@ -7,9 +7,13 @@ cache: cargo
 script: scripts/travis_build.sh
 
 before_script:
-  - (cargo install xargo || true)
-  - PATH=$PATH:~/.cargo/bin
-
+  - curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain=$TRAVIS_RUST_VERSION -y
+  - source ~/.cargo/env
+  - rustup component add rust-src
+  - (test -x $HOME/.cargo/bin/xargo || cargo install xargo)
+  - (test -x $HOME/.cargo/bin/rustfmt || cargo install rustfmt)
+  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
+  - cargo install-update -a
 addons:
   apt:
     packages:

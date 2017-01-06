@@ -3,14 +3,13 @@
 # Exit if anything fails...
 set -e
 
-# Kernel
+# Build Kernel
 make xargo
 
-#
-# Run Tests
-#
-
-# alloc_opsys
+# TEST: alloc_opsys
 pushd libs/alloc_opsys
 cargo test
 popd
+
+# Run rustfmt
+cargo fmt -- --write-mode=diff 

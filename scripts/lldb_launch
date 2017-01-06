@@ -1,0 +1,1 @@
+settings set plugin.process.gdb-remote.target-definition-file scripts/x86_64_target_definition.py
