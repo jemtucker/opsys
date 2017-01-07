@@ -124,21 +124,11 @@ fn exept_14(exception: *const ExceptionWithError) {
 // IRQ Handlers...
 
 // Handler for IRQ0 - the PIT interrupt
-fn irq0_handler(context: *const TaskContext) {
-    // unsafe {
-    //     vga_buffer::print_error(format_args!("Stack Pointer: {}", (context as usize)));
-    //
-    //     vga_buffer::print_error(format_args!("{:?}", *context));
-    // }
+fn irq0_handler(context: *mut TaskContext) {
+    let context_ref = unsafe { &mut *context };
+    let scheduler = unsafe { &mut *kget().scheduler.get() };
 
-    let ref mut context_ref = unsafe { *context };
-    let ref mut scheduler = unsafe { &mut *kget().scheduler.get() };
-
-    scheduler.tick(context_ref);
-
-    // loop {}
-
-    //unsafe { vga_buffer::print_error(format_args!("{:?}", *context)); }
+    let res = scheduler.tick(context_ref);
 
     PIC.send_end_of_interrupt(0);
 }

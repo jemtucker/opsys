@@ -46,17 +46,13 @@ impl Scheduler {
         let time = self.clock.tick();
         self.handle_timers(time);
 
-        if time % 500 != 0 {
+        if time % 10 != 0 {
             return;
         }
 
         if self.inactive_tasks.len() == 0 {
-
-            unsafe { ::vga_buffer::print_error(format_args!("No tasks")); }
             return;
         }
-
-        unsafe { ::vga_buffer::print_error(format_args!("Some tasks: {}", self.inactive_tasks.len())); }
 
         // Choose the next task and remove from list.
         // TODO List is definitely not the best structure to use here, pop_back is O(n). Research
@@ -64,15 +60,10 @@ impl Scheduler {
         let mut new_task = self.inactive_tasks.pop_back().unwrap();
         let mut old_task = self.active_task.take().unwrap();
 
-        unsafe { ::vga_buffer::print_error(format_args!("active_ctx: {:?}", *active_ctx)); }
-
         // Swap the contexts
         // Copy the active context to save it
         old_task.set_context(active_ctx);
         *active_ctx = *new_task.get_context();
-
-        unsafe { ::vga_buffer::print_error(format_args!("New task id: {}", new_task.id())); }
-        unsafe { ::vga_buffer::print_error(format_args!("new_task: {:?}", *active_ctx)); }
 
         // Update the schedulers internal references and store the initial
         // task back into the inactive_tasks list

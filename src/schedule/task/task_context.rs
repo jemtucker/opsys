@@ -1,7 +1,7 @@
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct TaskContext {
-    pub rsp: u64,
+    // GP Registers, pushed manually
     pub rax: u64,
     pub rbx: u64,
     pub rcx: u64,
@@ -17,13 +17,24 @@ pub struct TaskContext {
     pub r14: u64,
     pub r15: u64,
     pub rbp: u64,
+
+    // Rest of trap frame pushed by CPU interrupt
+    /// Instruction pointer
     pub rip: u64,
+
+    /// Code segment
+    pub cs: u64,
+
+    /// Flags register
+    pub rflags: u64,
+
+    /// Stack pointer
+    pub rsp: u64,
 }
 
 impl TaskContext {
     pub fn new(rsp: u64, rip: u64) -> TaskContext {
         TaskContext {
-            rsp: rsp,
             rax: 0,
             rbx: 0,
             rcx: 0,
@@ -40,6 +51,9 @@ impl TaskContext {
             r15: 0,
             rbp: 0,
             rip: rip,
+            cs: 8, // TODO calculate this properly
+            rflags: 582, // TODO work out the proper flags to start with
+            rsp: rsp,
         }
     }
 }

@@ -85,12 +85,9 @@ macro_rules! add_irq_handler_1 {
                   push rbx
                   push rax
                   mov rdi, rsp
-                  push rdi
-                  sub rdi, 8
 
                   call $0
 
-                  add rsp, 8
                   pop rax
                   pop rbx
                   pop rcx

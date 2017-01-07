@@ -67,12 +67,12 @@ impl MemoryManager {
     }
 
     pub fn allocate_pages_with_guard(&mut self, num: u8) -> usize {
-        // Allocate the pages
-        let start = self.allocate_pages(num);
-
         // Allocate a guard page by skipping to the next page.
         let next_page = self.next_page.next_page();
         self.next_page = next_page;
+
+        // Allocate the pages
+        let start = self.allocate_pages(num);
 
         start
     }
@@ -95,6 +95,6 @@ impl MemoryManager {
         // Map the new page
         self.active_table.map(page, paging::WRITABLE, &mut self.frame_allocator);
 
-        self.next_page.start_address()
+        page.start_address()
     }
 }

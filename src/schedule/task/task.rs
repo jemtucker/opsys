@@ -10,18 +10,15 @@ pub struct Task {
     id: u32,
     context: TaskContext,
     status: TaskStatus,
-    stack: usize,
 }
 
 impl Task {
-
     /// Create a new Task with an id 'id'. This task will be initialized with status READY.
     pub fn default() -> Task {
         Task {
             id: 0,
             context: TaskContext::new(0, 0),
             status: TaskStatus::READY,
-            stack: 0,
         }
     }
 
@@ -31,7 +28,6 @@ impl Task {
             id: id,
             context: TaskContext::new(stack as u64 + (4096 * 2), rip),
             status: TaskStatus::READY,
-            stack: stack,
         }
     }
 
