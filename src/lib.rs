@@ -52,13 +52,13 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     // Setup the heap allocator
     alloc_opsys::init();
 
+    vga_buffer::clear_screen();
+
     // Setup the kernel
     kernel::init(memory_manager);
 
     // Initialize interrupts
     interrupts::init();
-
-    vga_buffer::clear_screen();
 
     kprintln!("opsys v{}", "0.0.1");
 

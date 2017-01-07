@@ -3,6 +3,7 @@ use super::*;
 #[derive(Debug)]
 pub enum TaskStatus {
     READY,
+    RUNNING,
     COMPLETED,
 }
 
@@ -11,7 +12,6 @@ pub struct Task {
     id: u32,
     context: TaskContext,
     status: TaskStatus,
-    fun: Option<fn()>,
 }
 
 impl Task {
@@ -21,7 +21,6 @@ impl Task {
             id: 0,
             context: TaskContext::new(),
             status: TaskStatus::READY,
-            fun: None,
         }
     }
 
@@ -33,22 +32,18 @@ impl Task {
         context.cs = 8;
         context.rflags = 582;
         context.rsp = stack as u64 - (4096 * 2);
-        // context.rip = (Task::run as *const ()) as u64;
-        context.rip = (fun as *const ()) as u64;
-
-        // Create the task
-        let mut task = Task {
-            id: id,
-            context: context,
-            status: TaskStatus::READY,
-            fun: Some(fun),
-        };
 
         // Assign the entry point of the task to the execute function, passing the 'fun' function
         // as an argument in the rdi register.
-        task.context.rdi = (&task as *const Task) as u64;
+        context.rip = (execute as *const ()) as u64;
+        context.rdi = (fun as *const ()) as u64;
 
-        task
+        // Create the task
+        Task {
+            id: id,
+            context: context,
+            status: TaskStatus::READY,
+        }
     }
 
     /// Update this tasks context
@@ -60,17 +55,16 @@ impl Task {
     pub fn get_context(&self) -> &TaskContext {
         &self.context
     }
+}
 
-    pub fn run(&mut self) {
-        unsafe {
-            ::vga_buffer::print_error(format_args!("Executing task... {:?}", self));
-        }
+/// Wraps execution of a function with safe thread termination
+fn execute(fun: fn ()) {
+    // Execute the function
+    fun();
 
-        match self.fun {
-            Some(f) => f(),
-            None => (), // Nothing to do
-        }
+    // Get the 'active' task
 
-        self.status = TaskStatus::COMPLETED;
-    }
+    // Set it to not active (COMPLETED)
+
+    // Halt?
 }

@@ -33,10 +33,6 @@ impl Scheduler {
     pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
         let stack = memory_manager.allocate_pages_with_guard(2);
 
-        unsafe {
-            ::vga_buffer::print_error(format_args!("Scheduling: {}", self.task_count));
-        }
-
         self.inactive_tasks.push_front(Task::new(self.task_count, stack, func));
 
         self.task_count += 1;
@@ -52,9 +48,9 @@ impl Scheduler {
         let time = self.clock.tick();
         self.handle_timers(time);
 
-        // if time % 5 != 0 {
-        //     return;
-        // }
+        if time % 5 != 0 {
+            return;
+        }
 
         if self.inactive_tasks.len() == 0 {
             return;
