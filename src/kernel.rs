@@ -13,12 +13,25 @@ pub fn init(memory_manager: MemoryManager) {
     }
 
     let mut scheduler = unsafe { &mut *kget().scheduler.get() };
-    // scheduler.schedule(hello_world, 100);
+    let mut mm = unsafe {  &mut *kget().memory_manager.get()  };
+
+    scheduler.new_task(&mut mm, hello);
+    scheduler.new_task(&mut mm, world);
 }
 
-fn hello_world() {
+fn hello() {
     unsafe {
-        ::vga_buffer::print_error(format_args!("Hello World!"));
+        loop {
+            ::vga_buffer::print_error(format_args!("Hello"));
+        }
+    };
+}
+
+fn world() {
+    unsafe {
+        loop {
+            ::vga_buffer::print_error(format_args!("World!"));
+        }
     };
 }
 

@@ -17,12 +17,13 @@ pub struct TaskContext {
     pub r14: u64,
     pub r15: u64,
     pub rbp: u64,
+    pub rip: u64,
 }
 
 impl TaskContext {
-    pub fn new() -> TaskContext {
+    pub fn new(rsp: u64, rip: u64) -> TaskContext {
         TaskContext {
-            rsp: 0,
+            rsp: rsp,
             rax: 0,
             rbx: 0,
             rcx: 0,
@@ -38,6 +39,7 @@ impl TaskContext {
             r14: 0,
             r15: 0,
             rbp: 0,
+            rip: rip,
         }
     }
 }

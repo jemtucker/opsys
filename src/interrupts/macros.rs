@@ -65,7 +65,7 @@ macro_rules! add_irq_handler {
 }
 
 macro_rules! add_irq_handler_1 {
-    // Call a handler with a single argument.
+    // Call a handler with a single argument that returns a new return address.
     ($idt:expr, $int:expr, $handler:ident) => {{
         #[naked]
         extern "C" fn isr() -> ! { unsafe {

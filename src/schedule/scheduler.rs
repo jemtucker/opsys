@@ -5,6 +5,7 @@ use super::timer::Timer;
 use super::task::Task;
 use super::task::TaskContext;
 
+use memory::MemoryManager;
 
 pub struct Scheduler {
     timers: LinkedList<Timer>,
@@ -22,16 +23,17 @@ impl Scheduler {
         Scheduler {
             timers: LinkedList::new(),
             inactive_tasks: LinkedList::new(),
-            active_task: Some(Task::new(0)),
+            active_task: Some(Task::default()),
             task_count: 1,
             clock: Clock::new(),
         }
     }
 
     /// Create a new task to be scheduled.
-    pub fn new_task(&mut self, func: fn()) {
+    pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
+        let stack = memory_manager.allocate_pages_with_guard(2);
         self.task_count += 1;
-        self.inactive_tasks.push_front(Task::new(self.task_count));
+        self.inactive_tasks.push_front(Task::new(self.task_count, stack, func));
     }
 
     /// Schedule an event to be fired at a future time
@@ -44,9 +46,17 @@ impl Scheduler {
         let time = self.clock.tick();
         self.handle_timers(time);
 
-        if self.inactive_tasks.len() == 0 {
+        if time % 500 != 0 {
             return;
         }
+
+        if self.inactive_tasks.len() == 0 {
+
+            unsafe { ::vga_buffer::print_error(format_args!("No tasks")); }
+            return;
+        }
+
+        unsafe { ::vga_buffer::print_error(format_args!("Some tasks: {}", self.inactive_tasks.len())); }
 
         // Choose the next task and remove from list.
         // TODO List is definitely not the best structure to use here, pop_back is O(n). Research
@@ -54,10 +64,15 @@ impl Scheduler {
         let mut new_task = self.inactive_tasks.pop_back().unwrap();
         let mut old_task = self.active_task.take().unwrap();
 
+        unsafe { ::vga_buffer::print_error(format_args!("active_ctx: {:?}", *active_ctx)); }
+
         // Swap the contexts
         // Copy the active context to save it
         old_task.set_context(active_ctx);
         *active_ctx = *new_task.get_context();
+
+        unsafe { ::vga_buffer::print_error(format_args!("New task id: {}", new_task.id())); }
+        unsafe { ::vga_buffer::print_error(format_args!("new_task: {:?}", *active_ctx)); }
 
         // Update the schedulers internal references and store the initial
         // task back into the inactive_tasks list
