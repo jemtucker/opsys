@@ -32,8 +32,14 @@ impl Scheduler {
     /// Create a new task to be scheduled.
     pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
         let stack = memory_manager.allocate_pages_with_guard(2);
-        self.task_count += 1;
+
+        unsafe {
+            ::vga_buffer::print_error(format_args!("Scheduling: {}", self.task_count));
+        }
+
         self.inactive_tasks.push_front(Task::new(self.task_count, stack, func));
+
+        self.task_count += 1;
     }
 
     /// Schedule an event to be fired at a future time
@@ -46,9 +52,9 @@ impl Scheduler {
         let time = self.clock.tick();
         self.handle_timers(time);
 
-        if time % 10 != 0 {
-            return;
-        }
+        // if time % 5 != 0 {
+        //     return;
+        // }
 
         if self.inactive_tasks.len() == 0 {
             return;
@@ -57,7 +63,7 @@ impl Scheduler {
         // Choose the next task and remove from list.
         // TODO List is definitely not the best structure to use here, pop_back is O(n). Research
         // alternative rust collections...
-        let mut new_task = self.inactive_tasks.pop_back().unwrap();
+        let new_task = self.inactive_tasks.pop_back().unwrap();
         let mut old_task = self.active_task.take().unwrap();
 
         // Swap the contexts

@@ -33,7 +33,7 @@ pub struct TaskContext {
 }
 
 impl TaskContext {
-    pub fn new(rsp: u64, rip: u64) -> TaskContext {
+    pub fn new() -> TaskContext {
         TaskContext {
             rax: 0,
             rbx: 0,
@@ -50,10 +50,10 @@ impl TaskContext {
             r14: 0,
             r15: 0,
             rbp: 0,
-            rip: rip,
-            cs: 8, // TODO calculate this properly
-            rflags: 582, // TODO work out the proper flags to start with
-            rsp: rsp,
+            rip: 0,
+            cs: 0,
+            rflags: 0,
+            rsp: 0,
         }
     }
 }

@@ -1,8 +1,6 @@
 mod paging;
 pub mod area_frame_allocator;
 
-pub use self::paging::test_paging;
-
 pub use memory::area_frame_allocator::AreaFrameAllocator;
 
 use multiboot2;

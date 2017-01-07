@@ -128,7 +128,7 @@ fn irq0_handler(context: *mut TaskContext) {
     let context_ref = unsafe { &mut *context };
     let scheduler = unsafe { &mut *kget().scheduler.get() };
 
-    let res = scheduler.tick(context_ref);
+    scheduler.tick(context_ref);
 
     PIC.send_end_of_interrupt(0);
 }

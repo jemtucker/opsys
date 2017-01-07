@@ -20,17 +20,20 @@ pub fn init(memory_manager: MemoryManager) {
 }
 
 fn hello() {
+    use schedule::task::task::Task;
     unsafe {
+        let rdi: &Task;
+        asm!("mov $0, rdi" : "=r"(rdi) ::: "intel");
+        ::vga_buffer::print_error(format_args!("Hello: {:?}", rdi));
         loop {
-            ::vga_buffer::print_error(format_args!("Hello"));
         }
     };
 }
 
 fn world() {
     unsafe {
+        ::vga_buffer::print_error(format_args!("World"));
         loop {
-            ::vga_buffer::print_error(format_args!("World"));
         }
     };
 }
