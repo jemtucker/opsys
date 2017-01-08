@@ -1,15 +1,27 @@
-use super::*;
+use super::paging;
+use super::paging::Page;
+use super::paging::ActivePageTable;
 
-use memory::paging::Page;
-use memory::paging::ActivePageTable;
+use super::area_frame_allocator::AreaFrameAllocator;
 
+use super::stack_allocator::StackAllocator;
+use super::stack_allocator::Stack;
+
+use multiboot2;
+
+/// Manager object for all kernel memory.
 pub struct MemoryManager {
     frame_allocator: AreaFrameAllocator,
     active_table: ActivePageTable,
-    next_page: Page,
+    stack_allocator: StackAllocator,
 }
 
 impl MemoryManager {
+    /// Constructs a new `MemoryManager` using the multiboot header at the passed address.
+    ///
+    /// # Safety
+    /// Only ONE `MemoryManager` object should ever be instantiated for the lifetime of the kernel.
+    /// This is because the `MemoryManager` new call initializes and remaps the kernel memory.
     pub fn new(multiboot_info_address: usize) -> MemoryManager {
         // TODO - Ensure this function can only ever be called once.
         let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
@@ -62,39 +74,18 @@ impl MemoryManager {
         MemoryManager {
             frame_allocator: frame_allocator,
             active_table: active_table,
-            next_page: next_page,
+            stack_allocator: StackAllocator::new(next_page),
         }
     }
 
-    pub fn allocate_pages_with_guard(&mut self, num: u8) -> usize {
-        // Allocate a guard page by skipping to the next page.
-        let next_page = self.next_page.next_page();
-        self.next_page = next_page;
-
-        // Allocate the pages
-        let start = self.allocate_pages(num);
-
-        start
-    }
-
-    fn allocate_pages(&mut self, num: u8) -> usize {
-        let start = self.allocate_page();
-        for _ in 1..num {
-            self.allocate_page();
-        }
-
-        // Return the start address of the page we just mapped
-        start
-    }
-
-    fn allocate_page(&mut self) -> usize {
-        let next_page = self.next_page.next_page();
-        let page = self.next_page;
-        self.next_page = next_page;
-
-        // Map the new page
-        self.active_table.map(page, paging::WRITABLE, &mut self.frame_allocator);
-
-        page.start_address()
+    /// Allocate a new kernel stack.
+    ///
+    /// # Safety
+    /// Any stacks allocated by the memory manager must be returned when finised with to avoid
+    /// leaking resources.
+    /// TODO This is super un-rusty, we should use RAII or something to ensure stacks deallocate
+    /// themselves.
+    pub fn allocate_stack(&mut self) -> Stack {
+        self.stack_allocator.allocate(&mut self.active_table, &mut self.frame_allocator)
     }
 }

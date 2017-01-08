@@ -7,6 +7,9 @@ use memory::MemoryManager;
 // The main Kernel pointer, providing access to key objects
 pub static mut PKERNEL: Option<&'static mut Kernel> = None;
 
+/// Initialise global kernel objects.
+///
+/// Kernel objects are accessible through the `kget()` function.
 pub fn init(memory_manager: MemoryManager) {
     unsafe {
         PKERNEL = Some(&mut *Box::into_raw(box Kernel::new(memory_manager)));

@@ -1,13 +1,12 @@
 mod paging;
-pub mod area_frame_allocator;
-
-pub use memory::area_frame_allocator::AreaFrameAllocator;
-
-use multiboot2;
-use self::paging::PhysicalAddress;
-
 mod memory_manager;
+mod stack_allocator;
+mod area_frame_allocator;
+
 pub use self::memory_manager::MemoryManager;
+pub use self::stack_allocator::Stack;
+
+use self::paging::PhysicalAddress;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame {

@@ -1,5 +1,7 @@
 use super::*;
 
+use memory::Stack;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TaskStatus {
     READY,
@@ -12,8 +14,10 @@ pub struct Task {
     id: u32,
     context: TaskContext,
     status: TaskStatus,
+    stack: Stack,
 }
 
+/// A task to be run by the kernel. Currently this represents only a kernel thread.
 impl Task {
     /// Create a new Task with an id 'id'. This task will be initialized with status READY.
     pub fn default() -> Task {
@@ -21,17 +25,21 @@ impl Task {
             id: 0,
             context: TaskContext::new(),
             status: TaskStatus::READY,
+            stack: Stack {
+                start_address: 0,
+                size: 0,
+            },
         }
     }
 
     /// Create a new task with a stack and function to run
-    pub fn new(id: u32, stack: usize, fun: fn()) -> Task {
+    pub fn new(id: u32, stack: Stack, fun: fn()) -> Task {
         // TODO The CS and RFLAGS registers are hardcoded with working values. We should work them
         // out properly instead.
         let mut context = TaskContext::new();
         context.cs = 8;
         context.rflags = 582;
-        context.rsp = stack as u64 - (4096 * 2);
+        context.rsp = stack.top() as u64;
 
         // Assign the entry point of the task to the execute function, passing the 'fun' function
         // as an argument in the rdi register.
@@ -43,6 +51,7 @@ impl Task {
             id: id,
             context: context,
             status: TaskStatus::READY,
+            stack: stack,
         }
     }
 

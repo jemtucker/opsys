@@ -16,6 +16,7 @@ pub struct Scheduler {
     clock: Clock,
 }
 
+/// Scheduler for the kernel. Manages scheduling of tasks and timers
 impl Scheduler {
     /// Creates a new scheduler with empty lists of timers and tasks.
     pub fn new() -> Scheduler {
@@ -32,7 +33,7 @@ impl Scheduler {
 
     /// Create a new task to be scheduled.
     pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
-        let stack = memory_manager.allocate_pages_with_guard(2);
+        let stack = memory_manager.allocate_stack();
 
         self.inactive_tasks.push_front(Task::new(self.task_count, stack, func));
 
