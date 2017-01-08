@@ -37,8 +37,6 @@ mod io;
 mod schedule;
 mod kernel;
 
-use memory::MemoryManager;
-
 // Main entry point, need no_mangle so we can call from assembly
 // Extern to abide with C calling convention
 #[no_mangle]
@@ -47,7 +45,7 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     init_cpu();
 
     // Initialise the memory paging and instantiate a new memory manager
-    let memory_manager = MemoryManager::new(multiboot_info_address);
+    let memory_manager = memory::init(multiboot_info_address);
 
     // Setup the heap allocator
     alloc_opsys::init();
@@ -63,6 +61,9 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     kprintln!("opsys v{}", "0.0.1");
 
     loop {
+        // TODO consider switching contexts here so we no-longer have a dangling task.
+        // Also, put this in a function somewhere...
+        unsafe { asm!("hlt" :::: "intel" : "volatile"); }
     }
 }
 
