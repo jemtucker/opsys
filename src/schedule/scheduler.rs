@@ -3,6 +3,7 @@ use collections::linked_list::LinkedList;
 use super::clock::Clock;
 use super::timer::Timer;
 use super::task::Task;
+use super::task::TaskStatus;
 use super::task::TaskContext;
 
 use memory::MemoryManager;
@@ -67,10 +68,19 @@ impl Scheduler {
         old_task.set_context(active_ctx);
         *active_ctx = *new_task.get_context();
 
-        // Update the schedulers internal references and store the initial
-        // task back into the inactive_tasks list
+        // Update the schedulers internal references and store the initial task back into the
+        // inactive_tasks list if it is not yet finished.
         self.active_task = Some(new_task);
-        self.inactive_tasks.push_front(old_task);
+        if old_task.get_status() != TaskStatus::COMPLETED {
+            self.inactive_tasks.push_front(old_task);
+        }
+
+        // TODO some sort of task cleanup
+    }
+
+    /// Get a mutable reference to the current active task.
+    pub fn get_active_task_mut(&mut self) -> Option<&mut Task> {
+        self.active_task.as_mut()
     }
 
     /// Tick all the timers and prune any expired ones.

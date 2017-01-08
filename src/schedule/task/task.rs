@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TaskStatus {
     READY,
     RUNNING,
@@ -55,16 +55,36 @@ impl Task {
     pub fn get_context(&self) -> &TaskContext {
         &self.context
     }
+
+    /// Change the status of this Task
+    pub fn set_status(&mut self, status: TaskStatus) {
+        self.status = status;
+    }
+
+    /// Return the current Task status
+    pub fn get_status(&self) -> TaskStatus {
+        self.status
+    }
 }
 
 /// Wraps execution of a function with safe thread termination
-fn execute(fun: fn ()) {
+fn execute(fun: fn()) {
+    use kernel::kget;
+
     // Execute the function
     fun();
 
     // Get the 'active' task
+    let mut scheduler = unsafe { &mut *kget().scheduler.get() };
+    let mut task = scheduler.get_active_task_mut().unwrap();
 
     // Set it to not active (COMPLETED)
+    task.set_status(TaskStatus::COMPLETED);
 
     // Halt?
+    loop {
+        unsafe {
+            asm!("hlt" :::: "intel" : "volatile");
+        }
+    }
 }
