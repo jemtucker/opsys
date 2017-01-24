@@ -66,7 +66,9 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
 
     let next_page = heap_end_page.next_page();
 
-    MemoryManager::new(frame_allocator, active_table, StackAllocator::new(next_page))
+    MemoryManager::new(frame_allocator,
+                       active_table,
+                       StackAllocator::new(next_page))
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]

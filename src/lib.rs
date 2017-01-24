@@ -63,7 +63,9 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     loop {
         // TODO consider switching contexts here so we no-longer have a dangling task.
         // Also, put this in a function somewhere...
-        unsafe { asm!("hlt" :::: "intel" : "volatile"); }
+        unsafe {
+            asm!("hlt" :::: "intel" : "volatile");
+        }
     }
 }
 

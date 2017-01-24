@@ -5,7 +5,6 @@ use memory::Stack;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TaskStatus {
     READY,
-    RUNNING,
     COMPLETED,
 }
 
@@ -73,6 +72,18 @@ impl Task {
     /// Return the current Task status
     pub fn get_status(&self) -> TaskStatus {
         self.status
+    }
+}
+
+impl Drop for Task {
+    fn drop(&mut self) {
+        kprintln!("Task::Drop");
+
+        use kernel::kget;
+        let mut mm = unsafe { &mut *kget().memory_manager.get() };
+
+        // TODO is this safe? I have a feeling that the stack will still be used after this drop?
+        mm.deallocate_stack(&self.stack);
     }
 }
 

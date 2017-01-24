@@ -22,14 +22,14 @@ pub fn init(memory_manager: MemoryManager) {
     scheduler.new_task(&mut mm, world);
     scheduler.new_task(&mut mm, hello);
     scheduler.new_task(&mut mm, world);
-    scheduler.new_task(&mut mm, hello);
-    scheduler.new_task(&mut mm, world);
-    scheduler.new_task(&mut mm, hello);
-    scheduler.new_task(&mut mm, world);
-    scheduler.new_task(&mut mm, hello);
-    scheduler.new_task(&mut mm, world);
-    scheduler.new_task(&mut mm, hello);
-    scheduler.new_task(&mut mm, world);
+    // scheduler.new_task(&mut mm, hello);
+    // scheduler.new_task(&mut mm, world);
+    // scheduler.new_task(&mut mm, hello);
+    // scheduler.new_task(&mut mm, world);
+    // scheduler.new_task(&mut mm, hello);
+    // scheduler.new_task(&mut mm, world);
+    // scheduler.new_task(&mut mm, hello);
+    // scheduler.new_task(&mut mm, world);
 }
 
 fn hello() {
