@@ -57,8 +57,7 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     vga_buffer::clear_screen();
     kprintln!("OpSys v{}", "0.0.1");
 
-    loop {
-    }
+    loop {}
 }
 
 fn init_cpu() {
@@ -96,8 +95,7 @@ pub extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) ->
     kprintln!("    {}", fmt);
 
     // Hang here.
-    loop {
-    }
+    loop {}
 }
 
 #[allow(non_snake_case)]
