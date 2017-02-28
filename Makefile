@@ -1,6 +1,13 @@
-LINKER = $(HOME)/opt/bin/x86_64-pc-elf-ld
-ASSEMBLER = /usr/local/bin/nasm
-GRUB_MKRESCUE = $(HOME)/opt/bin/grub-mkrescue
+UNAME = $(shell uname -s)
+ifeq ($(UNAME), Linux)
+	LINKER = ld
+	ASSEMBLER = nasm
+	GRUB_MKRESCUE = grub-mkrescue
+else
+	LINKER = $(HOME)/opt/bin/x86_64-pc-elf-ld
+	ASSEMBLER = /usr/local/bin/nasm
+	GRUB_MKRESCUE = $(HOME)/opt/bin/grub-mkrescue
+endif
 
 TARGET = x86_64-opsys
 
