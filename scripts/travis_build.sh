@@ -10,6 +10,3 @@ make xargo
 pushd libs/alloc_opsys
 cargo test
 popd
-
-# Run rustfmt
-cargo fmt -- --write-mode=diff 
