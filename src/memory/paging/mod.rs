@@ -191,10 +191,10 @@ pub fn remap_the_kernel<A>(allocator: &mut A, boot_info: &BootInformation) -> Ac
             }
 
             kprintln!("mapping section at addr: {:#x}, size: {}",
-                      section.addr(),
-                      section.size());
+                      section.addr,
+                      section.size);
 
-            assert!(section.addr() as usize % PAGE_SIZE == 0,
+            assert!(section.addr as usize % PAGE_SIZE == 0,
                     "sections need to be page aligned");
 
             let flags = EntryFlags::from_elf_section_flags(section);
