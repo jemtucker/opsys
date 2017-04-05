@@ -18,18 +18,18 @@ pub fn init(multiboot_info_address: usize) {
 
     let kernel_start = elf_sections_tag.sections()
         .filter(|s| s.is_allocated())
-        .map(|s| s.addr)
+        .map(|s| s.addr())
         .min()
         .unwrap();
 
     let kernel_end = elf_sections_tag.sections()
         .filter(|s| s.is_allocated())
-        .map(|s| s.addr + s.size)
+        .map(|s| s.addr() + s.size())
         .max()
         .unwrap();
 
     let multiboot_start = multiboot_info_address;
-    let multiboot_end = multiboot_start + (boot_info.total_size as usize);
+    let multiboot_end = multiboot_start + (boot_info.total_size() as usize);
 
     kprintln!("kernel start: 0x{:x}, kernel end: 0x{:x}",
               kernel_start,
