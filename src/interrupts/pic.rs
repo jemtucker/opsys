@@ -5,9 +5,9 @@ const PIC2: u16 = 0xa0;
 
 const PIC_EOI: u8 = 0x20;
 
-const ICW1_ICW4: u8 = 0x01;         // ICW4 (not) needed
-const ICW1_INIT: u8 = 0x10;         // Initialization - required!
-const ICW4_8086: u8 = 0x01;         // 8086/88 (MCS-80/85) mode
+const ICW1_ICW4: u8 = 0x01; // ICW4 (not) needed
+const ICW1_INIT: u8 = 0x10; // Initialization - required!
+const ICW4_8086: u8 = 0x01; // 8086/88 (MCS-80/85) mode
 
 const PIC_READ_IRR: u8 = 0x0a;
 const PIC_READ_ISR: u8 = 0x0b;
@@ -65,13 +65,13 @@ impl Pic {
         io::Port::io_wait();
         self.pic2.command(ICW1_INIT + ICW1_ICW4);
         io::Port::io_wait();
-        self.pic1.write(0x20);  // ICW2: Master PIC vector offset
+        self.pic1.write(0x20); // ICW2: Master PIC vector offset
         io::Port::io_wait();
-        self.pic2.write(0x28);  // ICW2: Slave PIC vector offset
+        self.pic2.write(0x28); // ICW2: Slave PIC vector offset
         io::Port::io_wait();
-        self.pic1.write(4);     // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0100)
+        self.pic1.write(4); // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0100)
         io::Port::io_wait();
-        self.pic2.write(2);     // ICW3: tell Slave PIC its cascade identity (0000 0010)
+        self.pic2.write(2); // ICW3: tell Slave PIC its cascade identity (0000 0010)
         io::Port::io_wait();
 
         self.pic1.write(ICW4_8086);
