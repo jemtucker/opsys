@@ -23,16 +23,22 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
     // TODO - Ensure this function can only ever be called once.
     let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
 
-    let memory_map_tag = boot_info.memory_map_tag().expect("Memory map tag required");
-    let elf_sections_tag = boot_info.elf_sections_tag().expect("Elf sections tag required");
+    let memory_map_tag = boot_info
+        .memory_map_tag()
+        .expect("Memory map tag required");
+    let elf_sections_tag = boot_info
+        .elf_sections_tag()
+        .expect("Elf sections tag required");
 
-    let kernel_start = elf_sections_tag.sections()
+    let kernel_start = elf_sections_tag
+        .sections()
         .filter(|s| s.is_allocated())
         .map(|s| s.addr)
         .min()
         .unwrap();
 
-    let kernel_end = elf_sections_tag.sections()
+    let kernel_end = elf_sections_tag
+        .sections()
         .filter(|s| s.is_allocated())
         .map(|s| s.addr + s.size)
         .max()

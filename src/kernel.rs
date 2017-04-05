@@ -20,27 +20,27 @@ pub fn init(memory_manager: MemoryManager) {
 
     scheduler.new_task(&mut mm, hello);
     scheduler.new_task(&mut mm, world);
-    scheduler.new_task(&mut mm, hello);
-    scheduler.new_task(&mut mm, world);
-    // scheduler.new_task(&mut mm, hello);
-    // scheduler.new_task(&mut mm, world);
-    // scheduler.new_task(&mut mm, hello);
-    // scheduler.new_task(&mut mm, world);
-    // scheduler.new_task(&mut mm, hello);
-    // scheduler.new_task(&mut mm, world);
-    // scheduler.new_task(&mut mm, hello);
-    // scheduler.new_task(&mut mm, world);
 }
 
 fn hello() {
     unsafe {
-        ::vga_buffer::print_error(format_args!("Hello"));
+        loop {
+            ::vga_buffer::print_error(format_args!("Hello"));
+
+            // Sort of sleep
+            asm!("hlt" :::: "intel" : "volatile");
+        }
     };
 }
 
 fn world() {
     unsafe {
-        ::vga_buffer::print_error(format_args!("World"));
+        loop {
+            ::vga_buffer::print_error(format_args!("World"));
+
+            // Sort of sleep
+            asm!("hlt" :::: "intel" : "volatile");
+        }
     };
 }
 
