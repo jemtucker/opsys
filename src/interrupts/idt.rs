@@ -90,10 +90,12 @@ impl EntryOptions {
         self.0 = (self.0 & 0xfeff) | bit;
     }
 
+    #[allow(dead_code)]
     pub fn set_privilege_level(&mut self, dpl: u16) {
         self.0 = (self.0 & 0x9fff) | ((dpl << 13) & 0x6000);
     }
 
+    #[allow(dead_code)]
     pub fn set_stack_index(&mut self, index: u16) {
         self.0 = (self.0 & 0xfff8) | (index & 0x07);
     }

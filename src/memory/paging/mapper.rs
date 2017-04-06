@@ -83,7 +83,10 @@ impl Mapper {
             .or_else(huge_page)
     }
 
-    pub fn unmap<A>(&mut self, page: Page, allocator: &mut A)
+    pub fn unmap<A>(&mut self,
+                    page: Page,
+                    /* allocator */
+                    _: &mut A)
         where A: FrameAllocator
     {
         assert!(self.translate(page.start_address()).is_some());
@@ -94,7 +97,9 @@ impl Mapper {
             .and_then(|p2| p2.next_table_mut(page.p2_index()))
             .expect("mapping code does not support huge pages");
 
-        let frame = p1[page.p1_index()].pointed_frame().unwrap();
+        // Get the frame and set as free, the result should be free'd in the future but currently
+        // this is unsupported.
+        let _ = p1[page.p1_index()].pointed_frame().unwrap();
         p1[page.p1_index()].set_unused();
 
         // Reset the Translation Lookaside Buffer (cpu cache)

@@ -1,5 +1,3 @@
-use super::paging;
-use super::paging::Page;
 use super::paging::ActivePageTable;
 
 use super::area_frame_allocator::AreaFrameAllocator;

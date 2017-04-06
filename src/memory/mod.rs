@@ -8,7 +8,6 @@ pub use self::stack_allocator::Stack;
 
 use self::paging::Page;
 use self::paging::PhysicalAddress;
-use self::paging::ActivePageTable;
 use self::area_frame_allocator::AreaFrameAllocator;
 use self::stack_allocator::StackAllocator;
 

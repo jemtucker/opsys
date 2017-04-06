@@ -11,7 +11,6 @@
 
 #![no_std]
 
-#[macro_use]
 extern crate x86;
 extern crate rlibc;
 extern crate spin;
@@ -19,7 +18,6 @@ extern crate multiboot2;
 extern crate alloc_opsys;
 extern crate alloc;
 
-#[macro_use]
 extern crate collections;
 
 #[macro_use]

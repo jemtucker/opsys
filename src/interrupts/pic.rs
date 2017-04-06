@@ -94,6 +94,7 @@ impl Pic {
         self.pic1.command(PIC_EOI);
     }
 
+    #[allow(dead_code)]
     pub fn set_mask(&self, irq: u8) {
         assert!(irq < 16);
 
@@ -121,10 +122,12 @@ impl Pic {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_interrupt_request_reg(&self) -> u16 {
         self.get_register(PIC_READ_IRR)
     }
 
+    #[allow(dead_code)]
     pub fn get_in_service_reg(&self) -> u16 {
         self.get_register(PIC_READ_ISR)
     }

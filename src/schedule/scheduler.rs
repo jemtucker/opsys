@@ -42,6 +42,7 @@ impl Scheduler {
     }
 
     /// Schedule an event to be fired at a future time
+    #[allow(dead_code)]
     pub fn new_timer(&mut self, what: fn(), when: usize) {
         self.timers.push_front(Timer::new(what, when));
     }
