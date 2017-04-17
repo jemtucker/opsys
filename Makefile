@@ -54,3 +54,14 @@ clean:
 
 lldb:
 	rust-lldb "target/kernel.bin" -s "scripts/lldb_launch"
+
+fmt:
+	cargo fmt
+
+doc:
+	cargo rustdoc -- \
+    --no-defaults \
+    --passes strip-hidden \
+    --passes collapse-docs \
+    --passes unindent-comments \
+    --passes strip-priv-imports

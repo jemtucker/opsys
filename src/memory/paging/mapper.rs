@@ -29,7 +29,8 @@ impl Mapper {
     pub fn map_to<A>(&mut self, page: Page, frame: Frame, flags: EntryFlags, allocator: &mut A)
         where A: FrameAllocator
     {
-        let mut p3 = self.p4_mut().next_table_create(page.p4_index(), allocator);
+        let mut p3 = self.p4_mut()
+            .next_table_create(page.p4_index(), allocator);
         let mut p2 = p3.next_table_create(page.p3_index(), allocator);
         let mut p1 = p2.next_table_create(page.p2_index(), allocator);
 
@@ -56,9 +57,9 @@ impl Mapper {
                         // address must be 1GiB aligned
                         assert!(start_frame.number % (ENTRY_COUNT * ENTRY_COUNT) == 0);
                         return Some(Frame {
-                            number: start_frame.number + page.p2_index() * ENTRY_COUNT +
-                                    page.p1_index(),
-                        });
+                                        number: start_frame.number + page.p2_index() * ENTRY_COUNT +
+                                                page.p1_index(),
+                                    });
                     }
                 }
                 if let Some(p2) = p3.next_table(page.p3_index()) {
@@ -82,7 +83,10 @@ impl Mapper {
             .or_else(huge_page)
     }
 
-    pub fn unmap<A>(&mut self, page: Page, allocator: &mut A)
+    pub fn unmap<A>(&mut self,
+                    page: Page,
+                    /* allocator */
+                    _: &mut A)
         where A: FrameAllocator
     {
         assert!(self.translate(page.start_address()).is_some());
@@ -92,7 +96,10 @@ impl Mapper {
             .and_then(|p3| p3.next_table_mut(page.p3_index()))
             .and_then(|p2| p2.next_table_mut(page.p2_index()))
             .expect("mapping code does not support huge pages");
-        let frame = p1[page.p1_index()].pointed_frame().unwrap();
+
+        // Get the frame and set as free, the result should be free'd in the future but currently
+        // this is unsupported.
+        let _ = p1[page.p1_index()].pointed_frame().unwrap();
         p1[page.p1_index()].set_unused();
 
         // Reset the Translation Lookaside Buffer (cpu cache)

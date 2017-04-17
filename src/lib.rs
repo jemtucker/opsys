@@ -11,7 +11,6 @@
 
 #![no_std]
 
-#[macro_use]
 extern crate x86;
 extern crate rlibc;
 extern crate spin;
@@ -19,7 +18,6 @@ extern crate multiboot2;
 extern crate alloc_opsys;
 extern crate alloc;
 
-#[macro_use]
 extern crate collections;
 
 #[macro_use]
@@ -43,21 +41,30 @@ mod kernel;
 pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     // Initialise the hardware
     init_cpu();
-    memory::init(multiboot_info_address);
+
+    // Initialise the memory paging and instantiate a new memory manager
+    let memory_manager = memory::init(multiboot_info_address);
 
     // Setup the heap allocator
     alloc_opsys::init();
 
+    vga_buffer::clear_screen();
+
     // Setup the kernel
-    kernel::init();
+    kernel::init(memory_manager);
 
     // Initialize interrupts
     interrupts::init();
 
-    vga_buffer::clear_screen();
-    kprintln!("OpSys v{}", "0.0.1");
+    kprintln!("opsys v{}", "0.0.1");
 
-    loop {}
+    loop {
+        // TODO consider switching contexts here so we no-longer have a dangling task.
+        // Also, put this in a function somewhere...
+        unsafe {
+            asm!("hlt" :::: "intel" : "volatile");
+        }
+    }
 }
 
 fn init_cpu() {
@@ -101,5 +108,6 @@ pub extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) ->
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern "C" fn _Unwind_Resume() -> ! {
+    // Hang here.
     loop {}
 }

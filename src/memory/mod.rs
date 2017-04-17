@@ -1,28 +1,43 @@
 mod paging;
-pub mod area_frame_allocator;
+mod memory_manager;
+mod stack_allocator;
+mod area_frame_allocator;
 
-pub use self::paging::test_paging;
+pub use self::memory_manager::MemoryManager;
+pub use self::stack_allocator::Stack;
 
-pub use memory::area_frame_allocator::AreaFrameAllocator;
+use self::paging::Page;
+use self::paging::PhysicalAddress;
+use self::area_frame_allocator::AreaFrameAllocator;
+use self::stack_allocator::StackAllocator;
 
 use multiboot2;
-use self::paging::PhysicalAddress;
 
-pub fn init(multiboot_info_address: usize) {
+/// Initialises kernel memory using the multiboot header at `multiboot_info_address`
+///
+/// # Safety
+/// Only ONE `MemoryManager` object should ever be instantiated for the lifetime of the kernel.
+/// This is because the `MemoryManager` new call initializes and remaps the kernel memory.
+pub fn init(multiboot_info_address: usize) -> MemoryManager {
     // TODO - Ensure this function can only ever be called once.
-
     let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
 
-    let memory_map_tag = boot_info.memory_map_tag().expect("Memory map tag required");
-    let elf_sections_tag = boot_info.elf_sections_tag().expect("Elf sections tag required");
+    let memory_map_tag = boot_info
+        .memory_map_tag()
+        .expect("Memory map tag required");
+    let elf_sections_tag = boot_info
+        .elf_sections_tag()
+        .expect("Elf sections tag required");
 
-    let kernel_start = elf_sections_tag.sections()
+    let kernel_start = elf_sections_tag
+        .sections()
         .filter(|s| s.is_allocated())
         .map(|s| s.addr)
         .min()
         .unwrap();
 
-    let kernel_end = elf_sections_tag.sections()
+    let kernel_end = elf_sections_tag
+        .sections()
         .filter(|s| s.is_allocated())
         .map(|s| s.addr + s.size)
         .max()
@@ -46,15 +61,19 @@ pub fn init(multiboot_info_address: usize) {
 
     let mut active_table = paging::remap_the_kernel(&mut frame_allocator, boot_info);
 
-    use self::paging::Page;
     use alloc_opsys::{HEAP_START, HEAP_SIZE};
-
     let heap_start_page = Page::containing_address(HEAP_START);
     let heap_end_page = Page::containing_address(HEAP_START + HEAP_SIZE - 1);
 
     for page in Page::range_inclusive(heap_start_page, heap_end_page) {
         active_table.map(page, paging::WRITABLE, &mut frame_allocator);
     }
+
+    let next_page = heap_end_page.next_page();
+
+    MemoryManager::new(frame_allocator,
+                       active_table,
+                       StackAllocator::new(next_page))
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
