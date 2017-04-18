@@ -13,7 +13,7 @@ panic = "abort"
 crate-type = ["staticlib"]
 
 [dependencies]
-rlibc = "0.1.4"
+rlibc = "1.0"
 spin = "0.3.4"
 bitflags = "0.7.0"
 once = "0.2.1"
