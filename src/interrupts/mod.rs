@@ -1,70 +1,27 @@
-mod idt;
 mod pic;
-mod exception;
-
-#[macro_use]
-mod macros;
 
 use x86;
-use core::intrinsics;
 use drivers;
 use vga_buffer;
 
 use kernel::kget;
-
-use self::exception::Exception;
-use self::exception::ExceptionWithError;
-use self::exception::PageFaultErrorCode;
+use x86_64::VirtualAddress;
+use x86_64::structures::idt::{Idt, ExceptionStackFrame, PageFaultErrorCode};
 
 use schedule::task::TaskContext;
 
 lazy_static! {
-    static ref IDT: idt::Idt = {
-        let mut idt = idt::Idt::new();
+    static ref IDT: Idt = {
+        let mut idt = Idt::new();
 
         // Set all the handlers. Set default handler if a specific is not defined
         // to help debugging
-        add_exp_handler!(idt, 0, exept_00);
-        default_handler!(idt, 1);
-        default_handler!(idt, 2);
-        default_handler!(idt, 3);
-        default_handler!(idt, 4);
-        default_handler!(idt, 5);
-        default_handler!(idt, 6);
-        default_handler!(idt, 7);
-        default_handler!(idt, 8);
-        default_handler!(idt, 9);
-        default_handler!(idt, 10);
-        default_handler!(idt, 11);
-        default_handler!(idt, 12);
-        default_handler!(idt, 13);
-        add_exp_handler!(idt, 14, exept_14);
-        default_handler!(idt, 15);
-        default_handler!(idt, 16);
-        default_handler!(idt, 17);
-        default_handler!(idt, 18);
-        default_handler!(idt, 19);
-        default_handler!(idt, 20);
-        default_handler!(idt, 21);
-        default_handler!(idt, 22);
-        default_handler!(idt, 23);
-        default_handler!(idt, 24);
-        default_handler!(idt, 25);
-        default_handler!(idt, 26);
-        default_handler!(idt, 27);
-        default_handler!(idt, 28);
-        default_handler!(idt, 29);
-        default_handler!(idt, 30);
-        default_handler!(idt, 31);
-        add_irq_handler_1!(idt, 32, irq0_handler); // IRQ 0
-        add_irq_handler!(idt, 33, irq1_handler); // IRQ 1
-        default_handler!(idt, 34); // IRQ 3
-        default_handler!(idt, 35); // IRQ 4
-        default_handler!(idt, 36); // IRQ 5
-        default_handler!(idt, 37); // IRQ 6
-        default_handler!(idt, 38); // IRQ 7
-        default_handler!(idt, 39); // IRQ 8
-        default_handler!(idt, 40); // IRQ 9
+        idt.divide_by_zero.set_handler_fn(except_00);
+        idt.page_fault.set_handler_fn(except_14);
+
+        // Interrupts
+        idt.interrupts[0].set_handler_fn(irq0_handler); // IRQ 1
+        idt.interrupts[1].set_handler_fn(irq1_handler); // IRQ 2
 
         idt
     };
@@ -76,7 +33,7 @@ pub fn init() {
     PIC.init();
 
     // Enable some pic interrupts
-    PIC.clear_mask(0);
+    //PIC.clear_mask(0);
     PIC.clear_mask(1);
     // PIC.clear_mask(2);
     // PIC.clear_mask(3);
@@ -93,28 +50,24 @@ pub fn init() {
 
 // Some handlers...
 
-
-
 // Divide by zero
-fn exept_00(exception: *const Exception) {
+extern "x86-interrupt" fn except_00(_: &mut ExceptionStackFrame) {
     unsafe {
-        vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero\n{:#?}", *exception));
+        vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero\n"));
     };
 
     loop {}
 }
 
 // Page fault
-fn exept_14(exception: *const ExceptionWithError) {
+extern "x86-interrupt" fn except_14(stack_frame: &mut ExceptionStackFrame,
+                                    error_code: PageFaultErrorCode) {
     unsafe {
-        let code = (*exception).error_code;
-        let err = PageFaultErrorCode::from_bits(code);
-
         vga_buffer::print_error(format_args!("EXCEPTION: Page Fault accessing {:#x} \nerror \
                                               code: {:?}\n{:#?}",
                                              x86::controlregs::cr2(),
-                                             err.unwrap(),
-                                             *exception));
+                                             error_code,
+                                             stack_frame.instruction_pointer));
 
     };
 
@@ -124,7 +77,9 @@ fn exept_14(exception: *const ExceptionWithError) {
 // IRQ Handlers...
 
 // Handler for IRQ0 - the PIT interrupt
-fn irq0_handler(context: *mut TaskContext) {
+extern "x86-interrupt" fn irq0_handler(stack_frame: &mut ExceptionStackFrame) {
+    let VirtualAddress(address) = stack_frame.stack_pointer;
+    let context = address as *mut TaskContext;
     let context_ref = unsafe { &mut *context };
     let scheduler = unsafe { &mut *kget().scheduler.get() };
 
@@ -134,7 +89,7 @@ fn irq0_handler(context: *mut TaskContext) {
 }
 
 // Handler for IRQ1 - the keyboard interrupt
-fn irq1_handler() {
+extern "x86-interrupt" fn irq1_handler(_: &mut ExceptionStackFrame) {
     unsafe {
         drivers::KEYBOARD.handle_keypress();
         PIC.send_end_of_interrupt(1);

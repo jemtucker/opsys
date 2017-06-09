@@ -3,8 +3,7 @@
 #![feature(unique)]
 #![feature(alloc)]
 #![feature(asm)]
-#![feature(core_intrinsics)]
-#![feature(naked_functions)]
+#![feature(abi_x86_interrupt)]
 #![feature(collections)]
 #![feature(drop_types_in_const)]
 #![feature(box_syntax)]
@@ -12,6 +11,7 @@
 #![no_std]
 
 extern crate x86;
+extern crate x86_64;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;

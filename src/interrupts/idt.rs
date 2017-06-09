@@ -1,5 +1,14 @@
 use x86::segmentation::{self, SegmentSelector};
 
+// TODO - use from x86_64 package
+pub struct ExceptionStackFrame {
+    pub instruction_pointer: u64,
+    pub code_segment: u64,
+    pub cpu_flags: u64,
+    pub stack_pointer: u64,
+    pub stack_segment: u64,
+}
+
 pub struct Idt {
     table: [Entry; 255],
 }
@@ -11,6 +20,11 @@ impl Idt {
 
     pub fn set_handler(&mut self, entry: u8, handler: HandlerFunc) -> &mut EntryOptions {
         self.table[entry as usize] = Entry::new(segmentation::cs(), handler);
+        &mut self.table[entry as usize].options
+    }
+
+    pub fn set_handler_with_error(&mut self, entry: u8, handler: HandlerFuncWithError) -> &mut EntryOptions {
+        self.table[entry as usize] = Entry::new_with_error(segmentation::cs(), handler);
         &mut self.table[entry as usize].options
     }
 
@@ -39,6 +53,18 @@ pub struct Entry {
 
 impl Entry {
     fn new(gdt_selector: SegmentSelector, handler: HandlerFunc) -> Self {
+        let pointer = handler as u64;
+        Entry {
+            gdt_selector: gdt_selector,
+            pointer_low: pointer as u16,
+            pointer_middle: (pointer >> 16) as u16,
+            pointer_high: (pointer >> 32) as u32,
+            options: EntryOptions::new(),
+            reserved: 0,
+        }
+    }
+
+    fn new_with_error(gdt_selector: SegmentSelector, handler: HandlerFuncWithError) -> Self {
         let pointer = handler as u64;
         Entry {
             gdt_selector: gdt_selector,
@@ -101,4 +127,5 @@ impl EntryOptions {
     }
 }
 
-pub type HandlerFunc = extern "C" fn() -> !;
+pub type HandlerFunc = extern "x86-interrupt" fn(&ExceptionStackFrame);
+pub type HandlerFuncWithError = extern "x86-interrupt" fn(&ExceptionStackFrame, u64);

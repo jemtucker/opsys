@@ -43,6 +43,9 @@ xargo:
 run: target/os.iso
 	qemu-system-x86_64 -cdrom target/os.iso
 
+run_no_loop: target/os.iso
+	qemu-system-x86_64 -d int -no-reboot -cdrom target/os.iso
+
 debug: target/os.iso
 	qemu-system-x86_64 -cdrom target/os.iso -s
 
