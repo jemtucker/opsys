@@ -5,10 +5,11 @@ use drivers;
 use vga_buffer;
 
 use kernel::kget;
+use schedule::task::TaskContext;
+
 use x86_64::VirtualAddress;
 use x86_64::structures::idt::{Idt, ExceptionStackFrame, PageFaultErrorCode};
 
-use schedule::task::TaskContext;
 
 lazy_static! {
     static ref IDT: Idt = {
@@ -33,7 +34,7 @@ pub fn init() {
     PIC.init();
 
     // Enable some pic interrupts
-    //PIC.clear_mask(0);
+    PIC.clear_mask(0);
     PIC.clear_mask(1);
     // PIC.clear_mask(2);
     // PIC.clear_mask(3);
