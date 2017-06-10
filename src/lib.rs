@@ -28,6 +28,10 @@ extern crate once;
 
 #[macro_use]
 mod vga_buffer;
+
+#[macro_use]
+mod cpu;
+
 mod memory;
 mod interrupts;
 mod drivers;
@@ -58,13 +62,9 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
 
     kprintln!("opsys v{}", "0.0.1");
 
-    loop {
-        // TODO consider switching contexts here so we no-longer have a dangling task.
-        // Also, put this in a function somewhere...
-        unsafe {
-            asm!("hlt" :::: "intel" : "volatile");
-        }
-    }
+    // TODO consider switching contexts here so we no-longer have a dangling task.
+    // Also, put this in a function somewhere...
+    hang!();
 }
 
 fn init_cpu() {

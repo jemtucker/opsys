@@ -7,7 +7,8 @@ use vga_buffer;
 use kernel::kget;
 use schedule::task::TaskContext;
 
-use x86_64::VirtualAddress;
+use core::mem::size_of;
+
 use x86_64::structures::idt::{Idt, ExceptionStackFrame, PageFaultErrorCode};
 
 
@@ -57,7 +58,7 @@ extern "x86-interrupt" fn except_00(_: &mut ExceptionStackFrame) {
         vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero\n"));
     };
 
-    loop {}
+    hang!();
 }
 
 // Page fault
@@ -72,18 +73,27 @@ extern "x86-interrupt" fn except_14(stack_frame: &mut ExceptionStackFrame,
 
     };
 
-    loop {}
+    hang!();
 }
 
 // IRQ Handlers...
 
 // Handler for IRQ0 - the PIT interrupt
 extern "x86-interrupt" fn irq0_handler(stack_frame: &mut ExceptionStackFrame) {
-    let VirtualAddress(address) = stack_frame.stack_pointer;
-    let context = address as *mut TaskContext;
-    let context_ref = unsafe { &mut *context };
-    let scheduler = unsafe { &mut *kget().scheduler.get() };
+    // Calculate the relative offset of the TaskContext compared to the ExceptionStackFrame
+    let ptr_offset = (size_of::<TaskContext>() + size_of::<ExceptionStackFrame>()) as isize;
 
+    // Convert the &ExceptionStackFrame to a &TaskContext
+    let stack_frame_ptr = stack_frame as *const ExceptionStackFrame;
+    let context_address = unsafe { stack_frame_ptr.offset(ptr_offset) };
+    let context_ptr = context_address as *mut TaskContext;
+    let context_ref = unsafe { &mut *context_ptr };
+
+    unsafe { vga_buffer::print_error(format_args!("CONTEXT: {:?}", context_ref)); };
+    unsafe { vga_buffer::print_error(format_args!("TRAPFRAME: {:?}", stack_frame)); };
+
+    // Notify the scheduler
+    let scheduler = unsafe { &mut *kget().scheduler.get() };
     scheduler.tick(context_ref);
 
     PIC.send_end_of_interrupt(0);
