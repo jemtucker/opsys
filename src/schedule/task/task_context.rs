@@ -2,41 +2,53 @@ use core::fmt;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+/// Context of a kernel Task
 pub struct TaskContext {
-    /// GP Registers, pushed manually
-    // pub rbp: u64,
-    // pub r15: u64,
-    // pub r14: u64,
-    // pub r13: u64,
-    // pub r12: u64,
-    // pub r11: u64,
-    // pub r10: u64,
-    // pub r9: u64,
-    // pub r8: u64,
-    // pub rsi: u64,
-    // pub rdi: u64,
-    // pub rdx: u64,
-    // pub rcx: u64,
-    // pub rbx: u64,
-    // pub rax: u64,
-
+    /// GP Register RAX
     pub rax: u64,
+
+    /// GP Register RBX
     pub rbx: u64,
+
+    /// GP Register RCX
     pub rcx: u64,
+
+    /// GP Register RDX
     pub rdx: u64,
+
+    /// GP Register RDI
     pub rdi: u64,
+
+    /// GP Register RSI
     pub rsi: u64,
+
+    /// GP Register R8
     pub r8: u64,
+
+    /// GP Register R9
     pub r9: u64,
+
+    /// GP Register R10
     pub r10: u64,
+
+    /// GP Register R11
     pub r11: u64,
+
+    /// GP Register R12
     pub r12: u64,
+
+    /// GP Register R13
     pub r13: u64,
+
+    /// GP Register R14
     pub r14: u64,
+
+    /// GP Register R15
     pub r15: u64,
+
+    /// Base pointer
     pub rbp: u64,
 
-    /// Rest of trap frame pushed by CPU interrupt
     /// Instruction pointer
     pub rip: u64,
 
@@ -54,6 +66,10 @@ pub struct TaskContext {
 }
 
 impl TaskContext {
+
+    /// Create a new `TaskContext`
+    ///
+    /// All fields a set to zero.
     pub fn new() -> TaskContext {
         TaskContext {
             rax: 0,
