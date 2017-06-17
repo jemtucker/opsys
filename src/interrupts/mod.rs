@@ -29,6 +29,9 @@ lazy_static! {
 
 static PIC: pic::Pic = pic::Pic::new();
 
+/// Initialise kernel interrupt handling
+///
+/// Initialises the PIC and IDT. Enables CPU interrupts.
 pub fn init() {
     PIC.init();
 
@@ -48,9 +51,11 @@ pub fn init() {
     }
 }
 
-// Some handlers...
+// Exception Handlers
 
-// Divide by zero
+/// Divide by zero handler
+///
+/// Prints out details of the exception then sleeps the CPU forever.
 extern "x86-interrupt" fn except_00(_: &mut ExceptionStackFrame) {
     unsafe {
         vga_buffer::print_error(format_args!("EXCEPTION: Divide By Zero\n"));
@@ -59,7 +64,9 @@ extern "x86-interrupt" fn except_00(_: &mut ExceptionStackFrame) {
     hang!();
 }
 
-// Page fault
+/// Page fault handler
+///
+/// Prints out details of the exception then sleeps the CPU forever.
 extern "x86-interrupt" fn except_14(stack_frame: &mut ExceptionStackFrame,
                                     error_code: PageFaultErrorCode) {
     unsafe {
@@ -78,7 +85,10 @@ extern "x86-interrupt" fn except_14(stack_frame: &mut ExceptionStackFrame,
 
 // IRQ Handlers...
 
-// Handler for IRQ0 - the PIT interrupt
+/// Handler for IRQ0 - The PIT interrupt
+///
+/// Pushes all registers to the stack before calling irq0_handler_impl with the value of the stack
+/// pointer passed in rdi (see System V ABI). Finally, restores all registers from the stack.
 extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) {
     unsafe {
         asm!("push rbp
@@ -118,6 +128,9 @@ extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) {
       }
 }
 
+/// Ticks the system scheduler once.
+///
+/// Calls the system scheduler, passing a reference to the task context. Sets EOI before returning.
 fn irq0_handler_impl(context: *mut TaskContext) {
     let context_ref = unsafe { &mut *context };
     let scheduler = unsafe { &mut *kget().scheduler.get() };
@@ -127,7 +140,9 @@ fn irq0_handler_impl(context: *mut TaskContext) {
     PIC.send_end_of_interrupt(0);
 }
 
-// Handler for IRQ1 - the keyboard interrupt
+/// Handler for IRQ1 - The keyboard interrupt
+///
+/// Delegates handling to `drivers::KEYBOARD`. Sets EOI before returning.
 extern "x86-interrupt" fn irq1_handler(_: &mut ExceptionStackFrame) {
     unsafe {
         drivers::KEYBOARD.handle_keypress();
