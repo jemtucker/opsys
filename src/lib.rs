@@ -4,7 +4,6 @@
 #![feature(alloc)]
 #![feature(asm)]
 #![feature(abi_x86_interrupt)]
-#![feature(collections)]
 #![feature(drop_types_in_const)]
 #![feature(box_syntax)]
 
@@ -17,8 +16,6 @@ extern crate spin;
 extern crate multiboot2;
 extern crate alloc_opsys;
 extern crate alloc;
-
-extern crate collections;
 
 #[macro_use]
 extern crate bitflags;
@@ -62,8 +59,7 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
 
     kprintln!("opsys v{}", "0.0.1");
 
-    // TODO consider switching contexts here so we no-longer have a dangling task.
-    // Also, put this in a function somewhere...
+    // This thread now becomess the System 'Idle' thread.
     hang!();
 }
 

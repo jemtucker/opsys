@@ -1,4 +1,4 @@
-use collections::Vec;
+use alloc::Vec;
 
 use super::PAGE_SIZE;
 use super::paging;

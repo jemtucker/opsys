@@ -1,4 +1,4 @@
-use collections::linked_list::LinkedList;
+use alloc::linked_list::LinkedList;
 
 use super::clock::Clock;
 use super::timer::Timer;
