@@ -3,22 +3,19 @@
 #![feature(unique)]
 #![feature(alloc)]
 #![feature(asm)]
-#![feature(core_intrinsics)]
-#![feature(naked_functions)]
-#![feature(collections)]
+#![feature(abi_x86_interrupt)]
 #![feature(drop_types_in_const)]
 #![feature(box_syntax)]
 
 #![no_std]
 
 extern crate x86;
+extern crate x86_64;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
 extern crate alloc_opsys;
 extern crate alloc;
-
-extern crate collections;
 
 #[macro_use]
 extern crate bitflags;
@@ -28,6 +25,10 @@ extern crate once;
 
 #[macro_use]
 mod vga_buffer;
+
+#[macro_use]
+mod cpu;
+
 mod memory;
 mod interrupts;
 mod drivers;
@@ -58,13 +59,8 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
 
     kprintln!("opsys v{}", "0.0.1");
 
-    loop {
-        // TODO consider switching contexts here so we no-longer have a dangling task.
-        // Also, put this in a function somewhere...
-        unsafe {
-            asm!("hlt" :::: "intel" : "volatile");
-        }
-    }
+    // This thread now becomess the System 'Idle' thread.
+    hang!();
 }
 
 fn init_cpu() {

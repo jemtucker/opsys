@@ -1,4 +1,4 @@
-use collections::linked_list::LinkedList;
+use alloc::linked_list::LinkedList;
 
 use super::clock::Clock;
 use super::timer::Timer;
@@ -52,7 +52,7 @@ impl Scheduler {
         let time = self.clock.tick();
         self.handle_timers(time);
 
-        if time % 5 != 0 {
+        if time % 50 != 0 {
             return;
         }
 
