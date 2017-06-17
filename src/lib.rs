@@ -7,6 +7,7 @@
 #![feature(collections)]
 #![feature(drop_types_in_const)]
 #![feature(box_syntax)]
+#![feature(naked_functions)]
 
 #![no_std]
 

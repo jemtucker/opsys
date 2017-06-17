@@ -81,7 +81,7 @@ impl StackAllocator {
 
         kprintln!("Count: {} Allocate: {:?}", self.allocated.len(), stack);
         for s in &self.allocated {
-            kprintln!("Deallocate: {:?}", s);
+            kprintln!("A: {:?}", s);
         }
 
         stack
