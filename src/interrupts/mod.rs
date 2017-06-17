@@ -79,43 +79,44 @@ extern "x86-interrupt" fn except_14(stack_frame: &mut ExceptionStackFrame,
 // IRQ Handlers...
 
 // Handler for IRQ0 - the PIT interrupt
-#[naked]
-extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) { unsafe {
-    asm!("push rbp
-          push r15
-          push r14
-          push r13
-          push r12
-          push r11
-          push r10
-          push r9
-          push r8
-          push rsi
-          push rdi
-          push rdx
-          push rcx
-          push rbx
-          push rax
-          mov rdi, rsp
+extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) {
+    unsafe {
+        asm!("push rbp
+              push r15
+              push r14
+              push r13
+              push r12
+              push r11
+              push r10
+              push r9
+              push r8
+              push rsi
+              push rdi
+              push rdx
+              push rcx
+              push rbx
+              push rax
+              mov rdi, rsp
 
-          call $0
+              call $0
 
-          pop rax
-          pop rbx
-          pop rcx
-          pop rdx
-          pop rdi
-          pop rsi
-          pop r8
-          pop r9
-          pop r10
-          pop r11
-          pop r12
-          pop r13
-          pop r14
-          pop r15
-          pop rbp" :: "s"(irq0_handler_impl as fn(_)) :: "volatile", "intel");
-}}
+              pop rax
+              pop rbx
+              pop rcx
+              pop rdx
+              pop rdi
+              pop rsi
+              pop r8
+              pop r9
+              pop r10
+              pop r11
+              pop r12
+              pop r13
+              pop r14
+              pop r15
+              pop rbp" :: "s"(irq0_handler_impl as fn(_)) :: "volatile", "intel");
+      }
+}
 
 fn irq0_handler_impl(context: *mut TaskContext) {
     let context_ref = unsafe { &mut *context };
