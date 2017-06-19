@@ -22,12 +22,10 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
     // TODO - Ensure this function can only ever be called once.
     let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
 
-    let memory_map_tag = boot_info
-        .memory_map_tag()
-        .expect("Memory map tag required");
-    let elf_sections_tag = boot_info
-        .elf_sections_tag()
-        .expect("Elf sections tag required");
+    let memory_map_tag = boot_info.memory_map_tag().expect("Memory map tag required");
+    let elf_sections_tag = boot_info.elf_sections_tag().expect(
+        "Elf sections tag required",
+    );
 
     let kernel_start = elf_sections_tag
         .sections()
@@ -46,18 +44,24 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
     let multiboot_start = multiboot_info_address;
     let multiboot_end = multiboot_start + (boot_info.total_size as usize);
 
-    kprintln!("kernel start: 0x{:x}, kernel end: 0x{:x}",
-              kernel_start,
-              kernel_end);
-    kprintln!("multiboot start: 0x{:x}, multiboot end: 0x{:x}",
-              multiboot_start,
-              multiboot_end);
+    kprintln!(
+        "kernel start: 0x{:x}, kernel end: 0x{:x}",
+        kernel_start,
+        kernel_end
+    );
+    kprintln!(
+        "multiboot start: 0x{:x}, multiboot end: 0x{:x}",
+        multiboot_start,
+        multiboot_end
+    );
 
-    let mut frame_allocator = AreaFrameAllocator::new(kernel_start as usize,
-                                                      kernel_end as usize,
-                                                      multiboot_start,
-                                                      multiboot_end,
-                                                      memory_map_tag.memory_areas());
+    let mut frame_allocator = AreaFrameAllocator::new(
+        kernel_start as usize,
+        kernel_end as usize,
+        multiboot_start,
+        multiboot_end,
+        memory_map_tag.memory_areas(),
+    );
 
     let mut active_table = paging::remap_the_kernel(&mut frame_allocator, boot_info);
 
@@ -71,9 +75,11 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
 
     let next_page = heap_end_page.next_page();
 
-    MemoryManager::new(frame_allocator,
-                       active_table,
-                       StackAllocator::new(next_page))
+    MemoryManager::new(
+        frame_allocator,
+        active_table,
+        StackAllocator::new(next_page),
+    )
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]

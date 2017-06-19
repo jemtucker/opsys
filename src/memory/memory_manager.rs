@@ -14,10 +14,11 @@ pub struct MemoryManager {
 
 impl MemoryManager {
     /// Constructs a new `MemoryManager`
-    pub fn new(frame_allocator: AreaFrameAllocator,
-               active_table: ActivePageTable,
-               stack_allocator: StackAllocator)
-               -> MemoryManager {
+    pub fn new(
+        frame_allocator: AreaFrameAllocator,
+        active_table: ActivePageTable,
+        stack_allocator: StackAllocator,
+    ) -> MemoryManager {
         MemoryManager {
             frame_allocator: frame_allocator,
             active_table: active_table,
@@ -33,8 +34,10 @@ impl MemoryManager {
     /// TODO This is super un-rusty, we should use RAII or something to ensure stacks deallocate
     /// themselves.
     pub fn allocate_stack(&mut self) -> Stack {
-        self.stack_allocator
-            .allocate(&mut self.active_table, &mut self.frame_allocator)
+        self.stack_allocator.allocate(
+            &mut self.active_table,
+            &mut self.frame_allocator,
+        )
     }
 
     /// Deallocate a kernel stack.

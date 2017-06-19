@@ -67,17 +67,17 @@ extern "x86-interrupt" fn except_00(_: &mut ExceptionStackFrame) {
 /// Page fault handler
 ///
 /// Prints out details of the exception then sleeps the CPU forever.
-extern "x86-interrupt" fn except_14(stack_frame: &mut ExceptionStackFrame,
-                                    error_code: PageFaultErrorCode) {
+extern "x86-interrupt" fn except_14(
+    stack_frame: &mut ExceptionStackFrame,
+    error_code: PageFaultErrorCode,
+) {
     unsafe {
-        vga_buffer::print_error(
-            format_args!(
-                "EXCEPTION: Page Fault accessing {:#x} \nerror code: {:?}\n{:#?}",
-                x86::controlregs::cr2(),
-                error_code,
-                stack_frame.instruction_pointer
-            )
-        );
+        vga_buffer::print_error(format_args!(
+            "EXCEPTION: Page Fault accessing {:#x} \nerror code: {:?}\n{:#?}",
+            x86::controlregs::cr2(),
+            error_code,
+            stack_frame.instruction_pointer
+        ));
     };
 
     hang!();
@@ -125,7 +125,7 @@ extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) {
               pop r14
               pop r15
               pop rbp" :: "s"(irq0_handler_impl as fn(_)) :: "volatile", "intel");
-      }
+    }
 }
 
 /// Ticks the system scheduler once.

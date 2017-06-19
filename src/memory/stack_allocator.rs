@@ -52,10 +52,11 @@ impl StackAllocator {
     ///
     /// If no `Stack` is available on the free list DEFAULT_STACK_SIZE_PAGES will be mapped along
     /// with a further guard page.
-    pub fn allocate(&mut self,
-                    table: &mut ActivePageTable,
-                    allocator: &mut AreaFrameAllocator)
-                    -> Stack {
+    pub fn allocate(
+        &mut self,
+        table: &mut ActivePageTable,
+        allocator: &mut AreaFrameAllocator,
+    ) -> Stack {
         // If we have a free stack just return that.
         if !self.free.is_empty() {
             let stack = self.free.pop().unwrap();
@@ -95,10 +96,9 @@ impl StackAllocator {
             kprintln!("Deallocate: {:?}", s);
         }
 
-        let index =
-            self.allocated
-                .iter()
-                .position(|s| s.start_address == stack.start_address && s.size == stack.size);
+        let index = self.allocated.iter().position(|s| {
+            s.start_address == stack.start_address && s.size == stack.size
+        });
 
         // If the stack can be found then return it otherwise panic!
         match index {
@@ -107,17 +107,20 @@ impl StackAllocator {
                 self.free.push(freed_stack);
             }
             None => {
-                panic!("Attempt to free a Stack that has not been allocated: {:?}",
-                       stack)
+                panic!(
+                    "Attempt to free a Stack that has not been allocated: {:?}",
+                    stack
+                )
             }
         }
     }
 
-    fn allocate_pages(&mut self,
-                      num: u8,
-                      table: &mut ActivePageTable,
-                      allocator: &mut AreaFrameAllocator)
-                      -> usize {
+    fn allocate_pages(
+        &mut self,
+        num: u8,
+        table: &mut ActivePageTable,
+        allocator: &mut AreaFrameAllocator,
+    ) -> usize {
         // Allocating zero pages is silly
         assert!(num != 0);
 
@@ -130,10 +133,11 @@ impl StackAllocator {
         start
     }
 
-    fn allocate_page(&mut self,
-                     table: &mut ActivePageTable,
-                     allocator: &mut AreaFrameAllocator)
-                     -> usize {
+    fn allocate_page(
+        &mut self,
+        table: &mut ActivePageTable,
+        allocator: &mut AreaFrameAllocator,
+    ) -> usize {
         let next_page = self.next_page.next_page();
         let page = self.next_page;
         self.next_page = next_page;

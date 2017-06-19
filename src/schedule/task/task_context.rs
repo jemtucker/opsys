@@ -66,7 +66,6 @@ pub struct TaskContext {
 }
 
 impl TaskContext {
-
     /// Create a new `TaskContext`
     ///
     /// All fields a set to zero.

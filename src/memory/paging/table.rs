@@ -41,7 +41,8 @@ pub struct Table<L: TableLevel> {
 }
 
 impl<L> Table<L>
-    where L: TableLevel
+where
+    L: TableLevel,
 {
     pub fn zero(&mut self) {
         for entry in self.entries.iter_mut() {
@@ -51,27 +52,34 @@ impl<L> Table<L>
 }
 
 impl<L> Table<L>
-    where L: HierarchicalLevel
+where
+    L: HierarchicalLevel,
 {
     pub fn next_table(&self, index: usize) -> Option<&Table<L::NextLevel>> {
-        self.next_table_address(index)
-            .map(|address| unsafe { &*(address as *const _) })
+        self.next_table_address(index).map(|address| unsafe {
+            &*(address as *const _)
+        })
     }
 
     pub fn next_table_mut(&mut self, index: usize) -> Option<&mut Table<L::NextLevel>> {
-        self.next_table_address(index)
-            .map(|address| unsafe { &mut *(address as *mut _) })
+        self.next_table_address(index).map(|address| unsafe {
+            &mut *(address as *mut _)
+        })
     }
 
-    pub fn next_table_create<A>(&mut self,
-                                index: usize,
-                                allocator: &mut A)
-                                -> &mut Table<L::NextLevel>
-        where A: FrameAllocator
+    pub fn next_table_create<A>(
+        &mut self,
+        index: usize,
+        allocator: &mut A,
+    ) -> &mut Table<L::NextLevel>
+    where
+        A: FrameAllocator,
     {
         if self.next_table(index).is_none() {
-            assert!(!self.entries[index].flags().contains(HUGE_PAGE),
-                    "mapping code does not support huge pages");
+            assert!(
+                !self.entries[index].flags().contains(HUGE_PAGE),
+                "mapping code does not support huge pages"
+            );
             let frame = allocator.allocate_frame().expect("no frames available");
             self.entries[index].set(frame, PRESENT | WRITABLE);
             self.next_table_mut(index).unwrap().zero();
@@ -91,7 +99,8 @@ impl<L> Table<L>
 }
 
 impl<L> Index<usize> for Table<L>
-    where L: TableLevel
+where
+    L: TableLevel,
 {
     type Output = Entry;
 
@@ -101,7 +110,8 @@ impl<L> Index<usize> for Table<L>
 }
 
 impl<L> IndexMut<usize> for Table<L>
-    where L: TableLevel
+where
+    L: TableLevel,
 {
     fn index_mut(&mut self, index: usize) -> &mut Entry {
         &mut self.entries[index]

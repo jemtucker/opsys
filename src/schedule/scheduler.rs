@@ -35,8 +35,9 @@ impl Scheduler {
     pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
         let stack = memory_manager.allocate_stack();
 
-        self.inactive_tasks
-            .push_front(Task::new(self.task_count, stack, func));
+        self.inactive_tasks.push_front(
+            Task::new(self.task_count, stack, func),
+        );
 
         self.task_count += 1;
     }
