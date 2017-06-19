@@ -9,5 +9,8 @@ then
     exit 0
 fi
 
+# Write rustfmt version for test
+cargo fmt -- --version
+
 # Run format checks
 cargo fmt -- --write-mode=diff
