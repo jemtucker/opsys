@@ -6,6 +6,7 @@
 #![feature(abi_x86_interrupt)]
 #![feature(drop_types_in_const)]
 #![feature(box_syntax)]
+#![feature(global_allocator)]
 
 #![no_std]
 
@@ -22,6 +23,11 @@ extern crate bitflags;
 
 #[macro_use]
 extern crate once;
+
+use alloc_opsys::LockedAllocator;
+
+#[global_allocator]
+static ALLOCATOR: LockedAllocator = LockedAllocator::empty();
 
 #[macro_use]
 mod vga_buffer;
@@ -47,7 +53,7 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     let memory_manager = memory::init(multiboot_info_address);
 
     // Setup the heap allocator
-    alloc_opsys::init();
+    unsafe { ALLOCATOR.init(memory::KERN_HEAP_START, memory::KERN_HEAP_SIZE); }
 
     vga_buffer::clear_screen();
 

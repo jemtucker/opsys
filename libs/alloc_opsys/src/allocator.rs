@@ -3,39 +3,64 @@ use block::Block;
 use core::mem::size_of;
 use alloc::allocator::{Alloc, Layout, AllocErr};
 
-//const MIN_ALLOCATION: usize = 1;
-//const MIN_BLOCK_SIZE: usize = size_of::<Block>() + MIN_ALLOCATION;
-const MIN_BLOCK_SIZE: usize = 50;
-
-// WIP NOTES...
-// 1. Start with one massive block, break this up with every allocation. Walk for first fit.
-// 2. Deallocate just flag as free
-// 3. Merge free neighbours? - Maybe a GC function that runs periodically??
-//
-//
-//
+/// The minimum allowed block size
+pub const MIN_BLOCK_SIZE: usize = 50;
 
 pub struct Allocator {
     block_head: *mut Block,
 }
 
 impl Allocator {
-    // Create a new Allocator for a given heap. The heap must be at-least the size of a block
-    // header.
-    pub fn new(heap: &mut [u8], size: usize) -> Allocator {
-        assert!(size > size_of::<Block>());
-        let block = unsafe {
-            let mut b = (&mut heap[0] as *mut u8) as *mut Block;
-            (*b).prev = None;
-            (*b).next = None;
-            (*b).size = size - size_of::<Block>();
-            (*b).free = true;
-            b
-        };
-
-        Allocator { block_head: block }
+    /// Create an empty `Allocator`
+    ///
+    /// Creates an allocator with a null heap pointer. Empty Allocators must not used prior to
+    /// initialization.
+    pub const fn empty() -> Allocator {
+        Allocator { block_head: 0 as *mut Block }
     }
 
+    /// Create an `Allocator` for a memory buffer
+    ///
+    /// Creates a new `Allocator` for the memory buffer at address `heap` of size `size`.
+    ///
+    /// # Safety
+    ///
+    /// Memory address `heap` must be valid and contain at least `size` bytes of usable memory. The
+    /// buffer must be at least `MIN_BLOCK_SIZE` bytes.
+    pub unsafe fn new(heap: &mut [u8], size: usize) -> Allocator {
+        let mut allocator = Allocator::empty();
+        allocator.init(heap, size);
+        allocator
+    }
+
+    /// Initialize an `Allocator`
+    ///
+    /// Initialize an `Allocator` with a memory buffer at address `heap` of size `size`.
+    ///
+    /// # Safety
+    ///
+    /// Memory address `heap` must be valid and contain at least `size` bytes of usable memory. The
+    /// buffer must be at least `MIN_BLOCK_SIZE` bytes.
+    pub unsafe fn init(&mut self, heap: &mut [u8], size: usize) {
+        assert!(size > size_of::<Block>());
+
+        let mut block = (&mut heap[0] as *mut u8) as *mut Block;
+        (*block).prev = None;
+        (*block).next = None;
+        (*block).size = size - size_of::<Block>();
+        (*block).free = true;
+
+        self.block_head = block;
+    }
+
+    /// Return the next block of size `size` or greater.
+    ///
+    /// Iterates over all blocks untill one of size `size` or greater is found (that is free).
+    /// Returns `AllocErr` on Out Of Memory or invalid `current` pointer.
+    ///
+    /// # Safety
+    ///
+    /// Pointer `current` must point to a valid Block.
     unsafe fn next_fit(
         &mut self,
         size: usize,
@@ -116,28 +141,6 @@ unsafe impl Alloc for Allocator {
         // TODO Merge neighbours.
     }
 }
-
-
-// pub fn usable_size(&mut self, size: usize, _: usize) -> usize {
-//     // TODO Implement this properly...
-//     size
-// }
-//
-// pub fn realloc(&mut self, ptr: *mut u8, size: usize, new_size: usize,
-//     align: usize) -> Option<*mut u8> {
-//     // TODO We should check here wether the new size is smaller, if so maybe just return the
-//     // original pointer?
-//
-//     self.dealloc(ptr, size, align);
-//
-//     self.alloc(new_size, align)
-// }
-//
-// pub fn realloc_inplace(&mut self, _: *mut u8, size: usize,
-//     _: usize, _: usize) -> usize {
-//     // TODO Implement this properly...
-//     size
-// }
 
 // Get a pointer to the block that is encapsulating a given u8 pointer
 unsafe fn get_block_ptr<'a>(ptr: *mut u8) -> &'a mut Block {

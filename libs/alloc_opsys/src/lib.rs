@@ -4,45 +4,14 @@
 
 #![no_std]
 
-mod block;
-mod allocator;
-
 extern crate spin;
 extern crate alloc;
 
-#[cfg(not(test))]
-pub const HEAP_START: usize = 0o_000_001_000_000_0000;
+mod block;
+mod allocator;
+mod locked_allocator;
 
-#[cfg(not(test))]
-pub const HEAP_SIZE: usize = 100 * 1024; // 100 Kb
-
-#[cfg(not(test))]
-mod internal {
-
-    use allocator::Allocator;
-    use spin::Mutex;
-    use core::slice::from_raw_parts_mut;
-
-    pub static mut ALLOCATOR: Option<Mutex<Allocator>> = None;
-
-    pub fn _init() {
-        let heap_ptr = ::HEAP_START as *mut u8;
-        let mut heap: &mut [u8] = unsafe { from_raw_parts_mut::<u8>(heap_ptr, ::HEAP_SIZE) };
-
-        unsafe {
-            ALLOCATOR = Some(Mutex::new(Allocator::new(heap, ::HEAP_SIZE)));
-        }
-    }
-
-}
-
-#[cfg(not(test))]
-use internal::*;
-
-#[cfg(not(test))]
-pub fn init() {
-    _init();
-}
+pub use locked_allocator::LockedAllocator;
 
 // #[cfg(not(test))]
 // #[no_mangle]
