@@ -119,20 +119,3 @@ fn dealloc_1() {
         assert!(p3.is_ok());
     }
 }
-
-#[test]
-fn usable_size_0() {
-    // This will change in the future but for now just test that it returns the size
-    // we asked for
-    let mut heap = [0; HEAP_SIZE];
-
-    unsafe {
-        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
-
-        let size = 100;
-        let align = 0;
-
-        let _ = allocator.alloc(size, 0);
-        assert!(allocator.usable_size(size, align) == size);
-    }
-}
