@@ -14,6 +14,7 @@ pub struct Scheduler {
     active_task: Option<Task>,
     task_count: u32,
     clock: Clock,
+    last_resched: usize,
 }
 
 /// Scheduler for the kernel. Manages scheduling of tasks and timers
@@ -28,6 +29,7 @@ impl Scheduler {
             active_task: Some(Task::default()),
             task_count: 1,
             clock: Clock::new(),
+            last_resched: 0,
         }
     }
 
@@ -53,10 +55,13 @@ impl Scheduler {
         let time = self.clock.tick();
         self.handle_timers(time);
 
-        if time % 50 != 0 {
-            return;
+        if self.need_reschedule() {
+            self.schedule(active_ctx);
         }
+    }
 
+    /// Schedule in the next task
+    pub fn schedule(&mut self, active_ctx: &mut TaskContext) {
         if self.inactive_tasks.len() == 0 {
             return;
         }
@@ -80,11 +85,22 @@ impl Scheduler {
         }
 
         // TODO some sort of task cleanup
+
+        // Update the last_resched time
+        self.last_resched = self.clock.now();
     }
 
     /// Get a mutable reference to the current active task.
     pub fn get_active_task_mut(&mut self) -> Option<&mut Task> {
         self.active_task.as_mut()
+    }
+
+    /// Returns true if a reschedule is needed
+    ///
+    /// Returns true if the last reschedule was over 10 milliseconds ago.
+    pub fn need_reschedule(&self) -> bool {
+        let now = self.clock.now();
+        (now - self.last_resched) > 10
     }
 
     /// Tick all the timers and prune any expired ones.

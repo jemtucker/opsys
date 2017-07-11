@@ -14,4 +14,9 @@ impl Clock {
         self.milliseconds += 1;
         self.milliseconds
     }
+
+    /// Returns the number of milliseconds on this clock
+    pub fn now(&self) -> usize {
+        self.milliseconds
+    }
 }
