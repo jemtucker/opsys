@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # Exit if anything fails...
-set -e
+# This is temporarily disabled as rustfmt has not yet been updated to handle
+# the new 'x86-interrupt' ABI. 
+# set -e
 
 # If this is not a PR then there is nothing to do
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]
