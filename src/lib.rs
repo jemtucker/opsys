@@ -53,7 +53,9 @@ pub extern "C" fn kernel_main(multiboot_info_address: usize) {
     let memory_manager = memory::init(multiboot_info_address);
 
     // Setup the heap allocator
-    unsafe { ALLOCATOR.init(memory::KERN_HEAP_START, memory::KERN_HEAP_SIZE); }
+    unsafe {
+        ALLOCATOR.init(memory::KERN_HEAP_START, memory::KERN_HEAP_SIZE);
+    }
 
     vga_buffer::clear_screen();
 
