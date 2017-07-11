@@ -1,4 +1,4 @@
-use ::core::mem::size_of;
+use core::mem::size_of;
 
 pub struct Block {
     pub prev: Option<*mut Block>,

@@ -13,6 +13,9 @@ use self::stack_allocator::StackAllocator;
 
 use multiboot2;
 
+pub const KERN_HEAP_START: usize = 0o_000_001_000_000_0000;
+pub const KERN_HEAP_SIZE: usize = 100 * 1024; // 100 Kb
+
 /// Initialises kernel memory using the multiboot header at `multiboot_info_address`
 ///
 /// # Safety
@@ -65,9 +68,8 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
 
     let mut active_table = paging::remap_the_kernel(&mut frame_allocator, boot_info);
 
-    use alloc_opsys::{HEAP_START, HEAP_SIZE};
-    let heap_start_page = Page::containing_address(HEAP_START);
-    let heap_end_page = Page::containing_address(HEAP_START + HEAP_SIZE - 1);
+    let heap_start_page = Page::containing_address(KERN_HEAP_START);
+    let heap_end_page = Page::containing_address(KERN_HEAP_START + KERN_HEAP_SIZE - 1);
 
     for page in Page::range_inclusive(heap_start_page, heap_end_page) {
         active_table.map(page, paging::WRITABLE, &mut frame_allocator);
