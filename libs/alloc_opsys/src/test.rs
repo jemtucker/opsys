@@ -10,9 +10,10 @@ const HEAP_SIZE: usize = 1000;
 #[test]
 fn alloc_0() {
     let mut heap = [0; HEAP_SIZE];
-    let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
 
     unsafe {
+        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
+
         let layout = Layout::from_size_align_unchecked(26, 0);
         let result = allocator.alloc(layout);
         assert!(result.is_ok());
@@ -22,9 +23,10 @@ fn alloc_0() {
 #[test]
 fn alloc_1() {
     let mut heap = [0; HEAP_SIZE];
-    let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
 
     unsafe {
+        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
+
         // Allocate the entire heap
         for _ in 0..10 {
             let size = 100 - ::core::mem::size_of::<::block::Block>();
@@ -38,9 +40,10 @@ fn alloc_1() {
 #[test]
 fn returns_err_on_oom_01() {
     let mut heap = [0; HEAP_SIZE];
-    let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
 
     unsafe {
+        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
+
         let layout = Layout::from_size_align_unchecked(HEAP_SIZE + 1, 0);
         let result = allocator.alloc(layout);
         assert!(result.is_err());
@@ -50,9 +53,10 @@ fn returns_err_on_oom_01() {
 #[test]
 fn returns_err_on_oom_02() {
     let mut heap = [0; HEAP_SIZE];
-    let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
 
     unsafe {
+        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
+
         // Allocate the entire heap
         for _ in 0..10 {
             let size = 100 - ::core::mem::size_of::<::block::Block>();
@@ -73,11 +77,11 @@ fn returns_err_on_oom_02() {
 #[test]
 fn dealloc_0() {
     let mut heap = [0; HEAP_SIZE];
-    let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
-
     let size = 100 - ::core::mem::size_of::<::block::Block>();
 
     unsafe {
+        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
+
         // Allocate some memory
         let layout_a = Layout::from_size_align_unchecked(size, 0);
         let p1 = allocator.alloc(layout_a);
@@ -91,11 +95,11 @@ fn dealloc_0() {
 #[test]
 fn dealloc_1() {
     let mut heap = [0; HEAP_SIZE];
-    let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
-
     let size = 500 - ::core::mem::size_of::<::block::Block>();
 
     unsafe {
+        let mut allocator = Allocator::new(&mut heap, HEAP_SIZE);
+
         // Allocate the entire heap in two allocs
         let layout_a1 = Layout::from_size_align_unchecked(size, 0);
         let p1 = allocator.alloc(layout_a1);
