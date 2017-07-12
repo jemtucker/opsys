@@ -5,15 +5,20 @@ use memory::Stack;
 /// Status of a kernel task
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TaskStatus {
+    /// Task is ready to run or running
     READY,
+    /// Task is waiting and should not yet run
     WAITING,
+    /// Task is completed and ready to be destroyed
     COMPLETED,
 }
 
 /// Priority of a kernel task
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TaskPriority {
+    /// Highest priority, meant for interrupt handlers
     IRQ,
+    /// Normal priority, meant for all other kernel tasks
     NORMAL,
 }
 
@@ -95,6 +100,11 @@ impl Task {
     /// Return the current Task status
     pub fn get_status(&self) -> TaskStatus {
         self.status
+    }
+
+    /// Return the current Task priority
+    pub fn get_priority(&self) -> TaskPriority {
+        self.priority
     }
 }
 

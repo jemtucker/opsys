@@ -6,6 +6,7 @@ use kernel::kget;
 use memory::MemoryManager;
 use interrupts::bottom_half;
 
+/// Scheduler for the kernel. Manages scheduling of tasks and timers
 pub struct Scheduler {
     inactive_tasks: LinkedList<Task>,
     active_task: Option<Task>,
@@ -13,7 +14,6 @@ pub struct Scheduler {
     last_resched: usize,
 }
 
-/// Scheduler for the kernel. Manages scheduling of tasks and timers
 impl Scheduler {
     /// Creates a new scheduler
     ///
@@ -60,14 +60,19 @@ impl Scheduler {
     /// Choses the next task with status != `TaskStatus::COMPLETED` and switches its context with
     /// that of the currently active task.
     pub fn schedule(&mut self, active_ctx: &mut TaskContext) {
+
+        // Optimization - return early if nothing to do
         if self.inactive_tasks.len() == 0 {
             return;
         }
 
-        // Choose the next task and remove from list.
-        // TODO List is definitely not the best structure to use here, pop_back is O(n). Research
-        // alternative rust collections...
-        let new_task = self.inactive_tasks.pop_back().unwrap();
+        // First look for active high priority tasks first, if none of these exist then look for
+        // normal priority tasks.
+        let new_task = match self.next_task(TaskPriority::IRQ) {
+            Some(t) => t,
+            None => self.next_task(TaskPriority::NORMAL).unwrap(),
+        };
+
         let mut old_task = self.active_task.take().unwrap();
 
         // Swap the contexts
@@ -76,13 +81,12 @@ impl Scheduler {
         *active_ctx = *new_task.get_context();
 
         // Update the schedulers internal references and store the initial task back into the
-        // inactive_tasks list if it is not yet finished.
+        // inactive_tasks list if it is not yet finished. By not restoring COMPLETED tasks here
+        // we force cleanup of COMPLETED tasks.
         self.active_task = Some(new_task);
-        if old_task.get_status() != TaskStatus::READY {
+        if old_task.get_status() != TaskStatus::COMPLETED {
             self.inactive_tasks.push_front(old_task);
         }
-
-        // TODO some sort of task cleanup
 
         // Update the last_resched time
         self.update_last_resched();
@@ -106,5 +110,39 @@ impl Scheduler {
     fn update_last_resched(&mut self) {
         let clock = unsafe { &mut *kget().clock.get() };
         self.last_resched = clock.now();
+    }
+
+    /// Find the next task with priority matching `priority`
+    fn next_task(&mut self, priority: TaskPriority) -> Option<Task> {
+        let mut i = 0;
+        let mut found = false;
+
+        for ref t in self.inactive_tasks.iter() {
+            if t.get_priority() != priority || t.get_status() != TaskStatus::READY {
+                // On to the next, this is not suitable
+                i += 1;
+            } else {
+                found = true;
+                break;
+            }
+        }
+
+        if found {
+            // Split inactive_tasks, remove the task we found, then re-merge the two lists
+            let mut remainder = self.inactive_tasks.split_off(i);
+            let next_task = remainder.pop_front();
+
+            // Merge the lists
+            loop {
+                match remainder.pop_front() {
+                    Some(t) => self.inactive_tasks.push_back(t),
+                    None => break,
+                }
+            }
+
+            next_task
+        } else {
+            None
+        }
     }
 }
