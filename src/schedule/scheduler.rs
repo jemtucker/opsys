@@ -85,7 +85,7 @@ impl Scheduler {
         // we force cleanup of COMPLETED tasks.
         self.active_task = Some(new_task);
         if old_task.get_status() != TaskStatus::COMPLETED {
-            self.inactive_tasks.push_front(old_task);
+            self.inactive_tasks.push_back(old_task);
         }
 
         // Update the last_resched time
