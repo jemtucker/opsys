@@ -132,12 +132,18 @@ extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) {
 ///
 /// Calls the system scheduler, passing a reference to the task context. Sets EOI before returning.
 fn irq0_handler_impl(context: *mut TaskContext) {
-    let context_ref = unsafe { &mut *context };
-    let scheduler = unsafe { &mut *kget().scheduler.get() };
+    unsafe {
+        let clock = &mut *kget().clock.get();
+        clock.tick();
 
-    scheduler.tick(context_ref);
+        let scheduler = &mut *kget().scheduler.get();
+        if scheduler.need_resched() {
+            let context_ref = &mut *context;
+            scheduler.schedule(context_ref);
+        }
 
-    PIC.send_end_of_interrupt(0);
+        PIC.send_end_of_interrupt(0);
+    }
 }
 
 /// Handler for IRQ1 - The keyboard interrupt

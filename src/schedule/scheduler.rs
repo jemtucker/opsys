@@ -1,19 +1,16 @@
 use alloc::linked_list::LinkedList;
 
-use super::clock::Clock;
-use super::timer::Timer;
 use super::task::Task;
 use super::task::TaskStatus;
 use super::task::TaskContext;
 
+use kernel::kget;
 use memory::MemoryManager;
 
 pub struct Scheduler {
-    timers: LinkedList<Timer>,
     inactive_tasks: LinkedList<Task>,
     active_task: Option<Task>,
     task_count: u32,
-    clock: Clock,
     last_resched: usize,
 }
 
@@ -21,14 +18,10 @@ pub struct Scheduler {
 impl Scheduler {
     /// Creates a new scheduler with empty lists of timers and tasks.
     pub fn new() -> Scheduler {
-        // TODO Push the current "task" here in the constructor. This will ensure we always
-        // have an active task.
         Scheduler {
-            timers: LinkedList::new(),
             inactive_tasks: LinkedList::new(),
             active_task: Some(Task::default()),
             task_count: 1,
-            clock: Clock::new(),
             last_resched: 0,
         }
     }
@@ -44,23 +37,10 @@ impl Scheduler {
         self.task_count += 1;
     }
 
-    /// Schedule an event to be fired at a future time
-    #[allow(dead_code)]
-    pub fn new_timer(&mut self, what: fn(), when: usize) {
-        self.timers.push_front(Timer::new(what, when));
-    }
-
-    /// Increments the timer on all scheduled events.
-    pub fn tick(&mut self, active_ctx: &mut TaskContext) {
-        let time = self.clock.tick();
-        self.handle_timers(time);
-
-        if self.need_reschedule() {
-            self.schedule(active_ctx);
-        }
-    }
-
-    /// Schedule in the next task
+    /// Schedule the next task.
+    ///
+    /// Choses the next task with status != `TaskStatus::COMPLETED` and switches its context with
+    /// that of the currently active task.
     pub fn schedule(&mut self, active_ctx: &mut TaskContext) {
         if self.inactive_tasks.len() == 0 {
             return;
@@ -87,7 +67,7 @@ impl Scheduler {
         // TODO some sort of task cleanup
 
         // Update the last_resched time
-        self.last_resched = self.clock.now();
+        self.update_last_resched();
     }
 
     /// Get a mutable reference to the current active task.
@@ -98,24 +78,15 @@ impl Scheduler {
     /// Returns true if a reschedule is needed
     ///
     /// Returns true if the last reschedule was over 10 milliseconds ago.
-    pub fn need_reschedule(&self) -> bool {
-        let now = self.clock.now();
+    pub fn need_resched(&self) -> bool {
+        let clock = unsafe { &mut *kget().clock.get() };
+        let now = clock.now();
         (now - self.last_resched) > 10
     }
 
-    /// Tick all the timers and prune any expired ones.
-    fn handle_timers(&mut self, _: usize) {
-        // TODO Rework the timers to all use the centeral time. A task should run
-        // if its when <= now/
-        let mut new_timers = LinkedList::new();
-
-        for _ in 0..self.timers.len() {
-            let mut timer = self.timers.pop_front().unwrap();
-            if !timer.tick() {
-                new_timers.push_front(timer);
-            }
-        }
-
-        self.timers = new_timers;
+    /// Update `last_resched` to now.
+    fn update_last_resched(&mut self) {
+        let clock = unsafe { &mut *kget().clock.get() };
+        self.last_resched = clock.now();
     }
 }
