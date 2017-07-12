@@ -3,4 +3,5 @@ mod task_context;
 
 pub use self::task::Task;
 pub use self::task::TaskStatus;
+pub use self::task::TaskPriority;
 pub use self::task_context::TaskContext;

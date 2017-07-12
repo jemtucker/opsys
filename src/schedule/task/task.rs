@@ -2,28 +2,43 @@ use super::*;
 
 use memory::Stack;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Status of a kernel task
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TaskStatus {
     READY,
+    WAITING,
     COMPLETED,
 }
 
+/// Priority of a kernel task
+#[derive(Debug, PartialEq)]
+pub enum TaskPriority {
+    IRQ,
+    NORMAL,
+}
+
+/// A task to be run by the kernel.
+///
+/// Currently this represents only a kernel thread.
 #[derive(Debug)]
 pub struct Task {
     id: u32,
     context: TaskContext,
     status: TaskStatus,
+    priority: TaskPriority,
     stack: Stack,
 }
 
-/// A task to be run by the kernel. Currently this represents only a kernel thread.
 impl Task {
-    /// Create a new Task with an id 'id'. This task will be initialized with status READY.
+    /// Create a new Task with an id 'id'.
+    ///
+    /// This task will be initialized with status `READY` and priority `NORMAL`.
     pub fn default() -> Task {
         Task {
             id: 0,
             context: TaskContext::new(),
             status: TaskStatus::READY,
+            priority: TaskPriority::NORMAL,
             stack: Stack {
                 start_address: 0,
                 size: 0,
@@ -32,9 +47,16 @@ impl Task {
     }
 
     /// Create a new task with a stack and function to run
-    pub fn new(id: u32, stack: Stack, fun: fn()) -> Task {
-        // TODO The CS and RFLAGS registers are hardcoded with working values. We should work them
-        // out properly instead.
+    ///
+    /// The CS and RFLAGS registers are hardcoded with working values. RIP is set to the address of
+    /// the `execute` function with the first argument (RDI) holding the adress of `fun`.
+    pub fn new(
+        id: u32,
+        stack: Stack,
+        fun: fn(),
+        priority: TaskPriority,
+        status: TaskStatus,
+    ) -> Task {
         let mut context = TaskContext::new();
         context.cs = 8;
         context.rflags = 582;
@@ -49,7 +71,8 @@ impl Task {
         Task {
             id: id,
             context: context,
-            status: TaskStatus::READY,
+            status: status,
+            priority: priority,
             stack: stack,
         }
     }
@@ -101,10 +124,7 @@ fn execute(fun: fn()) {
     // Set it to not active (COMPLETED)
     task.set_status(TaskStatus::COMPLETED);
 
-    // Halt?
-    loop {
-        unsafe {
-            asm!("hlt" :::: "intel" : "volatile");
-        }
-    }
+    // TODO set scheduler to reschedule and halt! instead of hang!. Consider unreachable! after
+    // the halt
+    hang!();
 }

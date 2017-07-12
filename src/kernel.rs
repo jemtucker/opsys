@@ -62,9 +62,10 @@ pub struct Kernel {
 }
 
 impl Kernel {
-    pub fn new(memory_manager: MemoryManager) -> Kernel {
+    pub fn new(mut memory_manager: MemoryManager) -> Kernel {
+        kprintln!("Test0");
         Kernel {
-            scheduler: UnsafeCell::new(Scheduler::new()),
+            scheduler: UnsafeCell::new(Scheduler::new(&mut memory_manager)),
             memory_manager: UnsafeCell::new(memory_manager),
             clock: UnsafeCell::new(Clock::new()),
         }

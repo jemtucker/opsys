@@ -1,11 +1,10 @@
 use alloc::linked_list::LinkedList;
 
-use super::task::Task;
-use super::task::TaskStatus;
-use super::task::TaskContext;
+use super::task::{Task, TaskStatus, TaskContext, TaskPriority};
 
 use kernel::kget;
 use memory::MemoryManager;
+use interrupts::bottom_half;
 
 pub struct Scheduler {
     inactive_tasks: LinkedList<Task>,
@@ -16,12 +15,27 @@ pub struct Scheduler {
 
 /// Scheduler for the kernel. Manages scheduling of tasks and timers
 impl Scheduler {
-    /// Creates a new scheduler with empty lists of timers and tasks.
-    pub fn new() -> Scheduler {
+    /// Creates a new scheduler
+    ///
+    /// The currently active task is created along with a single, currently `WAITING`, task of
+    /// priority `IRQ`.
+    pub fn new(memory_manager: &mut MemoryManager) -> Scheduler {
+        let mut inactive_tasks = LinkedList::new();
+
+        // Create the kernel bottom_half IRQ processing thread
+        let stack = memory_manager.allocate_stack();
+        inactive_tasks.push_front(Task::new(
+            1,
+            stack,
+            bottom_half::execute,
+            TaskPriority::IRQ,
+            TaskStatus::WAITING,
+        ));
+
         Scheduler {
-            inactive_tasks: LinkedList::new(),
+            inactive_tasks: inactive_tasks,
             active_task: Some(Task::default()),
-            task_count: 1,
+            task_count: 2,
             last_resched: 0,
         }
     }
@@ -30,9 +44,13 @@ impl Scheduler {
     pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
         let stack = memory_manager.allocate_stack();
 
-        self.inactive_tasks.push_front(
-            Task::new(self.task_count, stack, func),
-        );
+        self.inactive_tasks.push_front(Task::new(
+            self.task_count,
+            stack,
+            func,
+            TaskPriority::NORMAL,
+            TaskStatus::READY,
+        ));
 
         self.task_count += 1;
     }
@@ -60,7 +78,7 @@ impl Scheduler {
         // Update the schedulers internal references and store the initial task back into the
         // inactive_tasks list if it is not yet finished.
         self.active_task = Some(new_task);
-        if old_task.get_status() != TaskStatus::COMPLETED {
+        if old_task.get_status() != TaskStatus::READY {
             self.inactive_tasks.push_front(old_task);
         }
 
