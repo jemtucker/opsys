@@ -1,5 +1,8 @@
 mod pic;
 
+#[macro_use]
+mod macros;
+
 use x86;
 use drivers;
 use vga_buffer;
@@ -20,8 +23,8 @@ lazy_static! {
         idt.page_fault.set_handler_fn(except_14);
 
         // Interrupts
-        idt.interrupts[0].set_handler_fn(irq0_handler); // IRQ 1
-        idt.interrupts[1].set_handler_fn(irq1_handler); // IRQ 2
+        irq_handler!(idt, 0, irq0);
+        irq_handler!(idt, 1, irq1);
 
         idt
     };
@@ -87,71 +90,15 @@ extern "x86-interrupt" fn except_14(
 
 /// Handler for IRQ0 - The PIT interrupt
 ///
-/// Pushes all registers to the stack before calling irq0_handler_impl with the value of the stack
-/// pointer passed in rdi (see System V ABI). Finally, restores all registers from the stack.
-extern "x86-interrupt" fn irq0_handler(_: &mut ExceptionStackFrame) {
-    unsafe {
-        asm!("push rbp
-              push r15
-              push r14
-              push r13
-              push r12
-              push r11
-              push r10
-              push r9
-              push r8
-              push rsi
-              push rdi
-              push rdx
-              push rcx
-              push rbx
-              push rax
-              mov rdi, rsp
-
-              call $0
-
-              pop rax
-              pop rbx
-              pop rcx
-              pop rdx
-              pop rdi
-              pop rsi
-              pop r8
-              pop r9
-              pop r10
-              pop r11
-              pop r12
-              pop r13
-              pop r14
-              pop r15
-              pop rbp" :: "s"(irq0_handler_impl as fn(_)) :: "volatile", "intel");
-    }
-}
-
-/// Ticks the system scheduler once.
-///
-/// Calls the system scheduler, passing a reference to the task context. Sets EOI before returning.
-fn irq0_handler_impl(context: *mut TaskContext) {
-    unsafe {
-        let clock = &mut *kget().clock.get();
-        clock.tick();
-
-        let scheduler = &mut *kget().scheduler.get();
-        if scheduler.need_resched() {
-            let context_ref = &mut *context;
-            scheduler.schedule(context_ref);
-        }
-
-        PIC.send_end_of_interrupt(0);
-    }
+/// Ticks the system clock once.
+unsafe fn irq0() {
+    let clock = &mut *kget().clock.get();
+    clock.tick();
 }
 
 /// Handler for IRQ1 - The keyboard interrupt
 ///
-/// Delegates handling to `drivers::KEYBOARD`. Sets EOI before returning.
-extern "x86-interrupt" fn irq1_handler(_: &mut ExceptionStackFrame) {
-    unsafe {
-        drivers::KEYBOARD.handle_keypress();
-        PIC.send_end_of_interrupt(1);
-    }
+/// Delegates handling to `drivers::KEYBOARD`.
+unsafe fn irq1() {
+    drivers::KEYBOARD.handle_keypress();
 }
