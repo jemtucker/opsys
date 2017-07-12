@@ -1,10 +1,14 @@
 use alloc::linked_list::LinkedList;
+use alloc::arc::Arc;
 
+use super::bottom_half;
+use super::bottom_half::BottomHalfManager;
+
+use super::task::{TID_SYSTEMIDLE, TID_BOTTOMHALFD};
 use super::task::{Task, TaskStatus, TaskContext, TaskPriority};
 
 use kernel::kget;
 use memory::MemoryManager;
-use interrupts::bottom_half;
 
 /// Scheduler for the kernel. Manages scheduling of tasks and timers
 pub struct Scheduler {
@@ -12,6 +16,8 @@ pub struct Scheduler {
     active_task: Option<Task>,
     task_count: u32,
     last_resched: usize,
+    need_resched: bool,
+    bh_manager: Arc<BottomHalfManager>,
 }
 
 impl Scheduler {
@@ -25,7 +31,7 @@ impl Scheduler {
         // Create the kernel bottom_half IRQ processing thread
         let stack = memory_manager.allocate_stack();
         inactive_tasks.push_front(Task::new(
-            1,
+            TID_BOTTOMHALFD,
             stack,
             bottom_half::execute,
             TaskPriority::IRQ,
@@ -34,9 +40,11 @@ impl Scheduler {
 
         Scheduler {
             inactive_tasks: inactive_tasks,
-            active_task: Some(Task::default()),
+            active_task: Some(Task::default(TID_SYSTEMIDLE)),
             task_count: 2,
             last_resched: 0,
+            need_resched: false,
+            bh_manager: Arc::new(BottomHalfManager::new()),
         }
     }
 
@@ -99,11 +107,31 @@ impl Scheduler {
 
     /// Returns true if a reschedule is needed
     ///
-    /// Returns true if the last reschedule was over 10 milliseconds ago.
+    /// Returns true if the last reschedule was over 10 cpu ticks ago.
     pub fn need_resched(&self) -> bool {
         let clock = unsafe { &mut *kget().clock.get() };
         let now = clock.now();
-        (now - self.last_resched) > 10
+        self.need_resched || (now - self.last_resched) > 10
+    }
+
+    /// Returns an Arc pointer to the bh_fifo
+    pub fn bh_manager(&self) -> Arc<BottomHalfManager> {
+        self.bh_manager.clone()
+    }
+
+    /// Set the status of task with `id`
+    pub fn set_task_status(&mut self, id: u32, status: TaskStatus) {
+        for t in self.inactive_tasks.iter_mut() {
+            if t.id() == id {
+                t.set_status(status);
+                return;
+            }
+        }
+    }
+
+    /// Set the internal 'need_resched' flag to true
+    pub fn set_need_resched(&mut self) {
+        self.need_resched = true;
     }
 
     /// Update `last_resched` to now.

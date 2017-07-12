@@ -1,5 +1,4 @@
 mod pic;
-pub mod bottom_half;
 
 #[macro_use]
 mod macros;

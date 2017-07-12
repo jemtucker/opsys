@@ -38,9 +38,9 @@ impl Task {
     /// Create a new Task with an id 'id'.
     ///
     /// This task will be initialized with status `READY` and priority `NORMAL`.
-    pub fn default() -> Task {
+    pub fn default(id: u32) -> Task {
         Task {
-            id: 0,
+            id: id,
             context: TaskContext::new(),
             status: TaskStatus::READY,
             priority: TaskPriority::NORMAL,
@@ -105,6 +105,11 @@ impl Task {
     /// Return the current Task priority
     pub fn get_priority(&self) -> TaskPriority {
         self.priority
+    }
+
+    /// Return the id of the Task
+    pub fn id(&self) -> u32 {
+        self.id
     }
 }
 
