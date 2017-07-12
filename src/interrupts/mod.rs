@@ -98,7 +98,12 @@ unsafe fn irq0() {
 
 /// Handler for IRQ1 - The keyboard interrupt
 ///
-/// Delegates handling to `drivers::KEYBOARD`.
+/// Instantiates and queues up a new keyboard driver bottom half.
 unsafe fn irq1() {
-    drivers::KEYBOARD.handle_keypress();
+    let scheduler = &*kget().scheduler.get();
+
+    let bh_manager = scheduler.bh_manager();
+    let keyboard = box drivers::Keyboard::new();
+
+    bh_manager.add_bh(keyboard);
 }

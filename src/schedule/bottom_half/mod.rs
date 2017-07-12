@@ -7,6 +7,9 @@ use schedule::task::TaskStatus;
 
 use spin::Mutex;
 
+/// Main bottomhalfd task
+///
+/// Loops forever, iterating over all queued `BottomHalf` tasks and executing them in series.
 pub fn execute() {
     loop {
         let mut scheduler = unsafe { &mut *kget().scheduler.get() };
@@ -28,7 +31,7 @@ pub fn execute() {
 /// A task to execute as the bottom half of an interrupt handler
 pub trait BottomHalf {
     /// Exectute the work for this bottom half
-    fn execute(&self);
+    fn execute(&mut self);
 }
 
 /// A first in first out queue of `BottomHalf` tasks
@@ -94,7 +97,7 @@ impl BottomHalfManager {
     pub fn execute_all(&self) {
         loop {
             match self.queue.lock().pop() {
-                Some(bh) => bh.execute(),
+                Some(mut bh) => bh.execute(),
                 None => break,
             }
         }
