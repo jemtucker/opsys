@@ -10,7 +10,7 @@ pub struct Mapper {
 
 impl Mapper {
     pub unsafe fn new() -> Mapper {
-        Mapper { p4: Unique::new(table::P4) }
+        Mapper { p4: Unique::new(table::P4).unwrap() }
     }
 
     pub fn translate(&self, virtual_address: VirtualAddress) -> Option<PhysicalAddress> {

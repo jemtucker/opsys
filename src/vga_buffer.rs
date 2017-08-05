@@ -58,7 +58,7 @@ pub struct Writer {
 pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
     column_position: 0,
     color_code: ColorCode::new(Color::White, Color::Black),
-    buffer: unsafe { Unique::new(0xb8000 as *mut _) },
+    buffer: unsafe { Unique::new_unchecked(0xb8000 as *mut _) },
 });
 
 impl Writer {
@@ -168,7 +168,7 @@ pub unsafe fn print_error(fmt: fmt::Arguments) {
     let mut writer = Writer {
         column_position: 0,
         color_code: ColorCode::new(Color::Red, Color::Black),
-        buffer: Unique::new(0xb8000 as *mut _),
+        buffer: Unique::new_unchecked(0xb8000 as *mut _),
     };
 
     let _ = writer.write_fmt(fmt);
