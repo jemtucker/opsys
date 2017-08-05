@@ -134,10 +134,11 @@ impl Scheduler {
         self.need_resched = true;
     }
 
-    /// Update `last_resched` to now.
+    /// Update `last_resched` to now and reset the `need_resched` flag
     fn update_last_resched(&mut self) {
         let clock = unsafe { &mut *kget().clock.get() };
         self.last_resched = clock.now();
+        self.need_resched = false;
     }
 
     /// Find the next task with priority matching `priority`

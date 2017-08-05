@@ -12,19 +12,26 @@ use spin::Mutex;
 /// Loops forever, iterating over all queued `BottomHalf` tasks and executing them in series.
 pub fn execute() {
     loop {
+        kprintln!("Enter loop BH::execute");
         let mut scheduler = unsafe { &mut *kget().scheduler.get() };
         let bh_manager = scheduler.bh_manager();
 
         // Execute all waiting bottom halves
         bh_manager.execute_all();
 
+        kprintln!("executed all BH");
+
         // Set the current task status to WAITING and set the scheduler to reschedule
         // at its next opportunity.
         scheduler.set_task_status(TID_BOTTOMHALFD, TaskStatus::WAITING);
         scheduler.set_need_resched();
 
+        kprintln!("Halting");
+
         // Sleep until the next interrupt
         halt!();
+
+        kprintln!("Awakened");
     }
 }
 

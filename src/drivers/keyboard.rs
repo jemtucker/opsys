@@ -1,5 +1,7 @@
 use io::Port;
 
+use schedule::bottom_half::BottomHalf;
+
 static CHARS: [u8; 59] = *b"??1234567890-=\x08?qwertyuiop[]\n?asdfghjkl;'`?\\zxcvbnm,./?*? ?";
 static CHARS_SHIFT: [u8; 59] = *b"??!@#$%^&*()_+??QWERTYUIOP{}\n?ASDFGHJKL:\"~?|ZXCVBNM<>??*? ?";
 
@@ -43,8 +45,6 @@ impl Keyboard {
         }
     }
 }
-
-use schedule::bottom_half::BottomHalf;
 
 impl BottomHalf for Keyboard {
     fn execute(&mut self) {
