@@ -7,6 +7,7 @@
 #![feature(drop_types_in_const)]
 #![feature(box_syntax)]
 #![feature(global_allocator)]
+#![feature(const_unsafe_cell_new)]
 
 #![no_std]
 
