@@ -79,7 +79,7 @@ fn init_cpu() {
 }
 
 fn enable_nxe_bit() {
-    use x86::msr::{IA32_EFER, rdmsr, wrmsr};
+    use x86_64::registers::msr::{IA32_EFER, rdmsr, wrmsr};
 
     let nxe_bit = 1 << 11;
     unsafe {
@@ -89,10 +89,8 @@ fn enable_nxe_bit() {
 }
 
 fn enable_write_protect_bit() {
-    use x86::controlregs::{cr0, cr0_write};
-
-    let wp_bit = 1 << 16;
-    unsafe { cr0_write(cr0() | wp_bit) };
+    use x86_64::registers::control_regs::{Cr0, cr0, cr0_write};
+    unsafe { cr0_write(cr0() | Cr0::WRITE_PROTECT) };
 }
 
 // For stack-unwinding, not supported currently

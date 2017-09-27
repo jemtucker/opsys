@@ -1,12 +1,13 @@
 mod pic;
 
-use x86;
 use drivers;
 use vga_buffer;
 
 use kernel::kget;
 use schedule::task::TaskContext;
 
+use x86_64::instructions::interrupts;
+use x86_64::registers::control_regs;
 use x86_64::structures::idt::{Idt, ExceptionStackFrame, PageFaultErrorCode};
 
 
@@ -47,7 +48,7 @@ pub fn init() {
 
     // Enable interrupts
     unsafe {
-        x86::irq::enable();
+        interrupts::enable();
     }
 }
 
@@ -74,7 +75,7 @@ extern "x86-interrupt" fn except_14(
     unsafe {
         vga_buffer::print_error(format_args!(
             "EXCEPTION: Page Fault accessing {:#x} \nerror code: {:?}\n{:#?}",
-            x86::controlregs::cr2(),
+            control_regs::cr2(),
             error_code,
             stack_frame.instruction_pointer
         ));
