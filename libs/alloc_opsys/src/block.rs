@@ -1,8 +1,9 @@
 use core::mem::size_of;
+use core::ptr::Unique;
 
 pub struct Block {
-    pub prev: Option<*mut Block>,
-    pub next: Option<*mut Block>,
+    pub prev: Option<Unique<Block>>,
+    pub next: Option<Unique<Block>>,
     pub size: usize, // Can probably make this smaller?
     pub free: bool,
 }
