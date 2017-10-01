@@ -27,7 +27,7 @@ impl LockedAllocator {
     /// The buffer must be at least `MIN_BLOCK_SIZE` bytes long.
     pub unsafe fn init(&self, start: usize, size: usize) {
         let heap_ptr = start as *mut u8;
-        let mut heap_ref = slice::from_raw_parts_mut(heap_ptr, size);
+        let heap_ref = slice::from_raw_parts_mut(heap_ptr, size);
         self.allocator.lock().init(heap_ref, size);
     }
 }

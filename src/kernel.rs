@@ -15,7 +15,7 @@ pub fn init(memory_manager: MemoryManager) {
         PKERNEL = Some(&mut *Box::into_raw(box Kernel::new(memory_manager)));
     }
 
-    let mut scheduler = unsafe { &mut *kget().scheduler.get() };
+    let scheduler = unsafe { &mut *kget().scheduler.get() };
     let mut mm = unsafe { &mut *kget().memory_manager.get() };
 
     scheduler.new_task(&mut mm, hello);

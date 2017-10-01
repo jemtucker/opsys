@@ -1,6 +1,7 @@
 #![feature(allocator_api)]
 #![feature(const_fn)]
 #![feature(alloc)]
+#![feature(unique)]
 
 #![no_std]
 

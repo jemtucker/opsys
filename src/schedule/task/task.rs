@@ -80,7 +80,7 @@ impl Drop for Task {
         kprintln!("Task::Drop");
 
         use kernel::kget;
-        let mut mm = unsafe { &mut *kget().memory_manager.get() };
+        let mm = unsafe { &mut *kget().memory_manager.get() };
 
         // TODO is this safe? I have a feeling that the stack will still be used after this drop?
         mm.deallocate_stack(&self.stack);
@@ -95,8 +95,8 @@ fn execute(fun: fn()) {
     fun();
 
     // Get the 'active' task
-    let mut scheduler = unsafe { &mut *kget().scheduler.get() };
-    let mut task = scheduler.get_active_task_mut().unwrap();
+    let scheduler = unsafe { &mut *kget().scheduler.get() };
+    let task = scheduler.get_active_task_mut().unwrap();
 
     // Set it to not active (COMPLETED)
     task.set_status(TaskStatus::COMPLETED);

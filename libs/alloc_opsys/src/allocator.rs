@@ -1,13 +1,14 @@
 use block::Block;
 
 use core::mem::size_of;
+use core::ptr::Unique;
 use alloc::allocator::{Alloc, Layout, AllocErr};
 
 /// The minimum allowed block size
 pub const MIN_BLOCK_SIZE: usize = 50;
 
 pub struct Allocator {
-    block_head: *mut Block,
+    block_head: Option<Unique<Block>>,
 }
 
 impl Allocator {
@@ -16,7 +17,7 @@ impl Allocator {
     /// Creates an allocator with a null heap pointer. Empty Allocators must not used prior to
     /// initialization.
     pub const fn empty() -> Allocator {
-        Allocator { block_head: 0 as *mut Block }
+        Allocator { block_head: None }
     }
 
     /// Create an `Allocator` for a memory buffer
@@ -44,13 +45,13 @@ impl Allocator {
     pub unsafe fn init(&mut self, heap: &mut [u8], size: usize) {
         assert!(size > size_of::<Block>());
 
-        let mut block = (&mut heap[0] as *mut u8) as *mut Block;
+        let block = (&mut heap[0] as *mut u8) as *mut Block;
         (*block).prev = None;
         (*block).next = None;
         (*block).size = size - size_of::<Block>();
         (*block).free = true;
 
-        self.block_head = block;
+        self.block_head = Unique::new(block);
     }
 
     /// Return the next block of size `size` or greater.
@@ -83,7 +84,7 @@ impl Allocator {
                 }
             }?;
 
-            self.next_fit(size, block)
+            self.next_fit(size, block.as_ptr())
         }
     }
 }
@@ -95,9 +96,9 @@ unsafe impl Alloc for Allocator {
         // TODO implement the alignment side of things
 
         // Find the next fitting block
-        let block_head = self.block_head;
+        let block_head = self.block_head.unwrap().as_ptr();
         let block_ptr = self.next_fit(size, block_head)?;
-        let mut block = block_ptr.as_mut().expect("Null Block Pointer");
+        let block = block_ptr.as_mut().expect("Null Block Pointer");
 
         // Found a block. We now need to see how big it is. If after allocation it is going to
         // leave unused memory larger than MIN_BLOCK_SIZE then we chunk it up and create a new
@@ -113,14 +114,14 @@ unsafe impl Alloc for Allocator {
             // Get a pointer to the next block and set it to point to whatever the original 'next'
             // was. This is because we are slotting this block in between the allocated block
             // and its neighbour.
-            let mut next_block = block.next_ptr();
+            let next_block = block.next_ptr();
             (*next_block).size = next_block_size;
-            (*next_block).prev = Some(block as *mut Block);
+            (*next_block).prev = Unique::new(block as *mut Block);
             (*next_block).next = block.next;
             (*next_block).free = true;
 
             // Finally set the allocated block to point to our new block and complete the chain.
-            block.next = Some(next_block);
+            block.next = Unique::new(next_block);
         }
 
         // Finally we mark the allocated block as used and return the data_pointer to the caller
@@ -130,7 +131,7 @@ unsafe impl Alloc for Allocator {
     }
 
     unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
-        let mut block = get_block_ptr(ptr);
+        let block = get_block_ptr(ptr);
 
         // This is only for the unit tests...
         debug_assert!(block.size == layout.size());
