@@ -4,8 +4,8 @@ use alloc::arc::Arc;
 use super::bottom_half;
 use super::bottom_half::BottomHalfManager;
 
-use super::task::{TID_SYSTEMIDLE, TID_BOTTOMHALFD};
-use super::task::{Task, TaskStatus, TaskContext, TaskPriority};
+use super::task::{TID_BOTTOMHALFD, TID_SYSTEMIDLE};
+use super::task::{Task, TaskContext, TaskPriority, TaskStatus};
 
 use kernel::kget;
 use memory::MemoryManager;
@@ -70,7 +70,6 @@ impl Scheduler {
     /// Choses the next task with status != `TaskStatus::COMPLETED` and switches its context with
     /// that of the currently active task.
     pub fn schedule(&mut self, active_ctx: &mut TaskContext) {
-
         // Optimization - return early if nothing to do
         if self.inactive_tasks.len() == 0 {
             return;
@@ -78,22 +77,22 @@ impl Scheduler {
 
         // First look for active high priority tasks first, if none of these exist then look for
         // normal priority tasks. There is guaranteed to always be at least one NORMAL priority
-        // task so it is safe to call unwrap.  
+        // task so it is safe to call unwrap.
         let new_task = match self.next_task(TaskPriority::IRQ) {
             Some(t) => t,
             None => {
                 if let Some(ref t) = self.active_task {
-                    // The active task is an interrupt handler that hasn't yet completed, let it 
+                    // The active task is an interrupt handler that hasn't yet completed, let it
                     // run to completion.
-                    if t.get_priority() == TaskPriority::IRQ && 
-                        t.get_status() == TaskStatus::READY {
+                    if t.get_priority() == TaskPriority::IRQ && t.get_status() == TaskStatus::READY
+                    {
                         return;
                     }
                 }
-                
+
                 // Theres definitely nothing higer priority!
                 self.next_task(TaskPriority::NORMAL).unwrap()
-            },
+            }
         };
 
         let mut old_task = self.active_task.take().unwrap();
@@ -145,7 +144,7 @@ impl Scheduler {
                 t.set_status(status);
                 return;
             }
-        }        
+        }
 
         for t in self.inactive_tasks.iter_mut() {
             if t.id() == id {

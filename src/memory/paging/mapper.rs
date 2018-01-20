@@ -1,7 +1,7 @@
-use super::{VirtualAddress, PhysicalAddress, Page, ENTRY_COUNT};
+use super::{Page, PhysicalAddress, VirtualAddress, ENTRY_COUNT};
 use super::entry::*;
-use super::table::{self, Table, Level4};
-use memory::{PAGE_SIZE, Frame, FrameAllocator};
+use super::table::{self, Level4, Table};
+use memory::{Frame, FrameAllocator, PAGE_SIZE};
 use core::ptr::Unique;
 
 pub struct Mapper {
@@ -10,7 +10,9 @@ pub struct Mapper {
 
 impl Mapper {
     pub unsafe fn new() -> Mapper {
-        Mapper { p4: Unique::new(table::P4).unwrap() }
+        Mapper {
+            p4: Unique::new(table::P4).unwrap(),
+        }
     }
 
     pub fn translate(&self, virtual_address: VirtualAddress) -> Option<PhysicalAddress> {
@@ -59,8 +61,8 @@ impl Mapper {
                         // address must be 1GiB aligned
                         assert!(start_frame.number % (ENTRY_COUNT * ENTRY_COUNT) == 0);
                         return Some(Frame {
-                            number: start_frame.number + page.p2_index() * ENTRY_COUNT +
-                                page.p1_index(),
+                            number: start_frame.number + page.p2_index() * ENTRY_COUNT
+                                + page.p1_index(),
                         });
                     }
                 }
@@ -71,7 +73,9 @@ impl Mapper {
                         if p2_entry.flags().contains(HUGE_PAGE) {
                             // address must be 2MiB aligned
                             assert!(start_frame.number % ENTRY_COUNT == 0);
-                            return Some(Frame { number: start_frame.number + page.p1_index() });
+                            return Some(Frame {
+                                number: start_frame.number + page.p1_index(),
+                            });
                         }
                     }
                 }
@@ -85,12 +89,8 @@ impl Mapper {
             .or_else(huge_page)
     }
 
-    pub fn unmap<A>(
-        &mut self,
-        page: Page,
-        /* allocator */
-        _: &mut A,
-    ) where
+    pub fn unmap<A>(&mut self, page: Page, /* allocator */ _: &mut A)
+    where
         A: FrameAllocator,
     {
         assert!(self.translate(page.start_address()).is_some());

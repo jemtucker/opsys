@@ -42,7 +42,9 @@ struct BottomHalfQueue {
 impl BottomHalfQueue {
     /// Construct a new `BottomHalfQueue`
     pub fn new() -> BottomHalfQueue {
-        BottomHalfQueue { queue: LinkedList::new() }
+        BottomHalfQueue {
+            queue: LinkedList::new(),
+        }
     }
 
     /// Returns the length of the queue
@@ -73,7 +75,9 @@ pub struct BottomHalfManager {
 impl BottomHalfManager {
     /// Construct a new `BottomHalfManager`
     pub fn new() -> BottomHalfManager {
-        BottomHalfManager { queue: Mutex::new(BottomHalfQueue::new()) }
+        BottomHalfManager {
+            queue: Mutex::new(BottomHalfQueue::new()),
+        }
     }
 
     /// Push a `BottomHalf` onto the back of the queue

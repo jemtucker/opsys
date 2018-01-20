@@ -10,8 +10,7 @@ use vga_buffer;
 use kernel::kget;
 use schedule::task::TaskContext;
 
-use x86_64::structures::idt::{Idt, ExceptionStackFrame, PageFaultErrorCode};
-
+use x86_64::structures::idt::{ExceptionStackFrame, Idt, PageFaultErrorCode};
 
 lazy_static! {
     static ref IDT: Idt = {

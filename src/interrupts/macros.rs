@@ -45,7 +45,7 @@ macro_rules! irq_handler {
             $irq_handler();
 
             PIC.send_end_of_interrupt($irq);
-            
+
             // Perform any rescheduling thats required
             let scheduler = &mut *kget().scheduler.get();
             if scheduler.need_resched() {

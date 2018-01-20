@@ -1,7 +1,7 @@
 use super::Page;
 use super::{ActivePageTable, VirtualAddress};
 
-use super::table::{Table, Level1};
+use super::table::{Level1, Table};
 
 use memory::Frame;
 use memory::FrameAllocator;
