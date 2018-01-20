@@ -81,7 +81,19 @@ impl Scheduler {
         // task so it is safe to call unwrap.  
         let new_task = match self.next_task(TaskPriority::IRQ) {
             Some(t) => t,
-            None => self.next_task(TaskPriority::NORMAL).unwrap(),
+            None => {
+                if let Some(ref t) = self.active_task {
+                    // The active task is an interrupt handler that hasn't yet completed, let it 
+                    // run to completion.
+                    if t.get_priority() == TaskPriority::IRQ && 
+                        t.get_status() == TaskStatus::READY {
+                        return;
+                    }
+                }
+                
+                // Theres definitely nothing higer priority!
+                self.next_task(TaskPriority::NORMAL).unwrap()
+            },
         };
 
         let mut old_task = self.active_task.take().unwrap();
