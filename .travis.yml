@@ -2,8 +2,11 @@ language: rust
 
 rust: nightly
 
-cache: cargo
-
+cache: 
+  directories:
+    - $HOME/.cargo
+    - $HOME/.xargo
+    - $TRAVIS_BUILD_DIR/target
 script: 
   - scripts/travis_build.sh
   - scripts/travis_pr.sh
