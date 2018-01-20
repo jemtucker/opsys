@@ -13,7 +13,7 @@ use spin::Mutex;
 pub fn execute() {
     loop {
         kprintln!("Enter loop BH::execute");
-        let mut scheduler = unsafe { &mut *kget().scheduler.get() };
+        let scheduler = unsafe { &mut *kget().scheduler.get() };
         let bh_manager = scheduler.bh_manager();
 
         // Execute all waiting bottom halves
@@ -94,7 +94,7 @@ impl BottomHalfManager {
         // If this is the first task added then tell the scheduler to schedule the bottom half
         // thread next time it runs
         if len == 1 {
-            let mut scheduler = unsafe { &mut *kget().scheduler.get() };
+            let scheduler = unsafe { &mut *kget().scheduler.get() };
             scheduler.set_task_status(TID_BOTTOMHALFD, TaskStatus::READY);
             scheduler.set_need_resched();
         }
