@@ -103,7 +103,11 @@ impl BottomHalfManager {
     /// Execute all currently queued `BottomHalf` tasks
     pub fn execute_all(&self) {
         loop {
-            match self.queue.lock().pop() {
+            // Scope to ensure lock is released while bottom half
+            // is executing.
+            let bh = { self.queue.lock().pop() };
+
+            match bh {
                 Some(mut bh) => bh.execute(),
                 None => break,
             }

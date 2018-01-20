@@ -44,14 +44,14 @@ macro_rules! irq_handler {
             // Call the interrupt specific handler
             $irq_handler();
 
+            PIC.send_end_of_interrupt($irq);
+            
             // Perform any rescheduling thats required
             let scheduler = &mut *kget().scheduler.get();
             if scheduler.need_resched() {
                 let context_ref = &mut *context;
                 scheduler.schedule(context_ref);
             }
-
-            PIC.send_end_of_interrupt($irq);
         }
 
         $idt.interrupts[$irq].set_handler_fn(base_handler);

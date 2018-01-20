@@ -10,6 +10,8 @@ use super::task::{Task, TaskStatus, TaskContext, TaskPriority};
 use kernel::kget;
 use memory::MemoryManager;
 
+const THREAD_QUANTUM: usize = 10;
+
 /// Scheduler for the kernel. Manages scheduling of tasks and timers
 pub struct Scheduler {
     inactive_tasks: LinkedList<Task>,
@@ -75,7 +77,8 @@ impl Scheduler {
         }
 
         // First look for active high priority tasks first, if none of these exist then look for
-        // normal priority tasks.
+        // normal priority tasks. There is guaranteed to always be at least one NORMAL priority
+        // task so it is safe to call unwrap.  
         let new_task = match self.next_task(TaskPriority::IRQ) {
             Some(t) => t,
             None => self.next_task(TaskPriority::NORMAL).unwrap(),
@@ -107,11 +110,15 @@ impl Scheduler {
 
     /// Returns true if a reschedule is needed
     ///
-    /// Returns true if the last reschedule was over 10 cpu ticks ago.
+    /// Returns true if the last reschedule was over `THREAD_QUANTUM` cpu ticks ago.
     pub fn need_resched(&self) -> bool {
+        if self.need_resched {
+            return true;
+        }
+
         let clock = unsafe { &mut *kget().clock.get() };
         let now = clock.now();
-        self.need_resched || (now - self.last_resched) > 10
+        (now - self.last_resched) > THREAD_QUANTUM
     }
 
     /// Returns an Arc pointer to the bh_fifo
@@ -121,6 +128,13 @@ impl Scheduler {
 
     /// Set the status of task with `id`
     pub fn set_task_status(&mut self, id: u32, status: TaskStatus) {
+        if let Some(ref mut t) = self.active_task {
+            if t.id() == id {
+                t.set_status(status);
+                return;
+            }
+        }        
+
         for t in self.inactive_tasks.iter_mut() {
             if t.id() == id {
                 t.set_status(status);
