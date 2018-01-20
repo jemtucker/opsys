@@ -10,10 +10,11 @@ else
 endif
 
 TARGET = x86_64-opsys
+TARGET_PATH = $(shell pwd)
 
 default: build
 
-build: target/kernel.bin
+build: target/kernel.bin 
 
 .PHONY: clean
 
@@ -38,7 +39,7 @@ target/os.iso: target/kernel.bin src/asm/grub.cfg
 	$(GRUB_MKRESCUE) -o target/os.iso target/isofiles
 
 xargo:
-	xargo build --release --target=$(TARGET)
+	RUST_TARGET_PATH=$(TARGET_PATH) xargo build --release --target=$(TARGET)
 
 run: target/os.iso
 	qemu-system-x86_64 -cdrom target/os.iso
