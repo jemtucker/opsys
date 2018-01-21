@@ -8,16 +8,15 @@
 #![feature(global_allocator)]
 #![feature(const_unsafe_cell_new)]
 #![feature(const_unique_new)]
-
 #![no_std]
 
-extern crate x86;
-extern crate x86_64;
+extern crate alloc;
+extern crate alloc_opsys;
+extern crate multiboot2;
 extern crate rlibc;
 extern crate spin;
-extern crate multiboot2;
-extern crate alloc_opsys;
-extern crate alloc;
+extern crate x86;
+extern crate x86_64;
 
 #[macro_use]
 extern crate bitflags;
@@ -79,7 +78,7 @@ fn init_cpu() {
 }
 
 fn enable_nxe_bit() {
-    use x86::msr::{IA32_EFER, rdmsr, wrmsr};
+    use x86::msr::{rdmsr, wrmsr, IA32_EFER};
 
     let nxe_bit = 1 << 11;
     unsafe {

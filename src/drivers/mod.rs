@@ -1,3 +1,5 @@
+mod rtc;
 mod keyboard;
 
-pub static mut KEYBOARD: keyboard::Keyboard = keyboard::Keyboard::new();
+pub use self::keyboard::Keyboard;
+pub use self::rtc::Clock;

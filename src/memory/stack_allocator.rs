@@ -96,9 +96,9 @@ impl StackAllocator {
             kprintln!("Deallocate: {:?}", s);
         }
 
-        let index = self.allocated.iter().position(|s| {
-            s.start_address == stack.start_address && s.size == stack.size
-        });
+        let index = self.allocated
+            .iter()
+            .position(|s| s.start_address == stack.start_address && s.size == stack.size);
 
         // If the stack can be found then return it otherwise panic!
         match index {
@@ -106,12 +106,10 @@ impl StackAllocator {
                 let freed_stack = self.allocated.swap_remove(i);
                 self.free.push(freed_stack);
             }
-            None => {
-                panic!(
-                    "Attempt to free a Stack that has not been allocated: {:?}",
-                    stack
-                )
-            }
+            None => panic!(
+                "Attempt to free a Stack that has not been allocated: {:?}",
+                stack
+            ),
         }
     }
 

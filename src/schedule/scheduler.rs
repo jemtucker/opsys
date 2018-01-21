@@ -1,33 +1,52 @@
 use alloc::linked_list::LinkedList;
+use alloc::arc::Arc;
 
-use super::clock::Clock;
-use super::timer::Timer;
-use super::task::Task;
-use super::task::TaskStatus;
-use super::task::TaskContext;
+use super::bottom_half;
+use super::bottom_half::BottomHalfManager;
 
+use super::task::{TID_BOTTOMHALFD, TID_SYSTEMIDLE};
+use super::task::{Task, TaskContext, TaskPriority, TaskStatus};
+
+use kernel::kget;
 use memory::MemoryManager;
 
+const THREAD_QUANTUM: usize = 10;
+
+/// Scheduler for the kernel. Manages scheduling of tasks and timers
 pub struct Scheduler {
-    timers: LinkedList<Timer>,
     inactive_tasks: LinkedList<Task>,
     active_task: Option<Task>,
     task_count: u32,
-    clock: Clock,
+    last_resched: usize,
+    need_resched: bool,
+    bh_manager: Arc<BottomHalfManager>,
 }
 
-/// Scheduler for the kernel. Manages scheduling of tasks and timers
 impl Scheduler {
-    /// Creates a new scheduler with empty lists of timers and tasks.
-    pub fn new() -> Scheduler {
-        // TODO Push the current "task" here in the constructor. This will ensure we always
-        // have an active task.
+    /// Creates a new scheduler
+    ///
+    /// The currently active task is created along with a single, currently `WAITING`, task of
+    /// priority `IRQ`.
+    pub fn new(memory_manager: &mut MemoryManager) -> Scheduler {
+        let mut inactive_tasks = LinkedList::new();
+
+        // Create the kernel bottom_half IRQ processing thread
+        let stack = memory_manager.allocate_stack();
+        inactive_tasks.push_front(Task::new(
+            TID_BOTTOMHALFD,
+            stack,
+            bottom_half::execute,
+            TaskPriority::IRQ,
+            TaskStatus::WAITING,
+        ));
+
         Scheduler {
-            timers: LinkedList::new(),
-            inactive_tasks: LinkedList::new(),
-            active_task: Some(Task::default()),
-            task_count: 1,
-            clock: Clock::new(),
+            inactive_tasks: inactive_tasks,
+            active_task: Some(Task::default(TID_SYSTEMIDLE)),
+            task_count: 2,
+            last_resched: 0,
+            need_resched: false,
+            bh_manager: Arc::new(BottomHalfManager::new()),
         }
     }
 
@@ -35,36 +54,47 @@ impl Scheduler {
     pub fn new_task(&mut self, memory_manager: &mut MemoryManager, func: fn()) {
         let stack = memory_manager.allocate_stack();
 
-        self.inactive_tasks.push_front(
-            Task::new(self.task_count, stack, func),
-        );
+        self.inactive_tasks.push_front(Task::new(
+            self.task_count,
+            stack,
+            func,
+            TaskPriority::NORMAL,
+            TaskStatus::READY,
+        ));
 
         self.task_count += 1;
     }
 
-    /// Schedule an event to be fired at a future time
-    #[allow(dead_code)]
-    pub fn new_timer(&mut self, what: fn(), when: usize) {
-        self.timers.push_front(Timer::new(what, when));
-    }
-
-    /// Increments the timer on all scheduled events.
-    pub fn tick(&mut self, active_ctx: &mut TaskContext) {
-        let time = self.clock.tick();
-        self.handle_timers(time);
-
-        if time % 50 != 0 {
-            return;
-        }
-
+    /// Schedule the next task.
+    ///
+    /// Choses the next task with status != `TaskStatus::COMPLETED` and switches its context with
+    /// that of the currently active task.
+    pub fn schedule(&mut self, active_ctx: &mut TaskContext) {
+        // Optimization - return early if nothing to do
         if self.inactive_tasks.len() == 0 {
             return;
         }
 
-        // Choose the next task and remove from list.
-        // TODO List is definitely not the best structure to use here, pop_back is O(n). Research
-        // alternative rust collections...
-        let new_task = self.inactive_tasks.pop_back().unwrap();
+        // First look for active high priority tasks first, if none of these exist then look for
+        // normal priority tasks. There is guaranteed to always be at least one NORMAL priority
+        // task so it is safe to call unwrap.
+        let new_task = match self.next_task(TaskPriority::IRQ) {
+            Some(t) => t,
+            None => {
+                if let Some(ref t) = self.active_task {
+                    // The active task is an interrupt handler that hasn't yet completed, let it
+                    // run to completion.
+                    if t.get_priority() == TaskPriority::IRQ && t.get_status() == TaskStatus::READY
+                    {
+                        return;
+                    }
+                }
+
+                // Theres definitely nothing higer priority!
+                self.next_task(TaskPriority::NORMAL).unwrap()
+            }
+        };
+
         let mut old_task = self.active_task.take().unwrap();
 
         // Swap the contexts
@@ -73,13 +103,15 @@ impl Scheduler {
         *active_ctx = *new_task.get_context();
 
         // Update the schedulers internal references and store the initial task back into the
-        // inactive_tasks list if it is not yet finished.
+        // inactive_tasks list if it is not yet finished. By not restoring COMPLETED tasks here
+        // we force cleanup of COMPLETED tasks.
         self.active_task = Some(new_task);
         if old_task.get_status() != TaskStatus::COMPLETED {
-            self.inactive_tasks.push_front(old_task);
+            self.inactive_tasks.push_back(old_task);
         }
 
-        // TODO some sort of task cleanup
+        // Update the last_resched time
+        self.update_last_resched();
     }
 
     /// Get a mutable reference to the current active task.
@@ -87,19 +119,84 @@ impl Scheduler {
         self.active_task.as_mut()
     }
 
-    /// Tick all the timers and prune any expired ones.
-    fn handle_timers(&mut self, _: usize) {
-        // TODO Rework the timers to all use the centeral time. A task should run
-        // if its when <= now/
-        let mut new_timers = LinkedList::new();
+    /// Returns true if a reschedule is needed
+    ///
+    /// Returns true if the last reschedule was over `THREAD_QUANTUM` cpu ticks ago.
+    pub fn need_resched(&self) -> bool {
+        if self.need_resched {
+            return true;
+        }
 
-        for _ in 0..self.timers.len() {
-            let mut timer = self.timers.pop_front().unwrap();
-            if !timer.tick() {
-                new_timers.push_front(timer);
+        let clock = unsafe { &mut *kget().clock.get() };
+        let now = clock.now();
+        (now - self.last_resched) > THREAD_QUANTUM
+    }
+
+    /// Returns an Arc pointer to the bh_fifo
+    pub fn bh_manager(&self) -> Arc<BottomHalfManager> {
+        self.bh_manager.clone()
+    }
+
+    /// Set the status of task with `id`
+    pub fn set_task_status(&mut self, id: u32, status: TaskStatus) {
+        if let Some(ref mut t) = self.active_task {
+            if t.id() == id {
+                t.set_status(status);
+                return;
             }
         }
 
-        self.timers = new_timers;
+        for t in self.inactive_tasks.iter_mut() {
+            if t.id() == id {
+                t.set_status(status);
+                return;
+            }
+        }
+    }
+
+    /// Set the internal 'need_resched' flag to true
+    pub fn set_need_resched(&mut self) {
+        self.need_resched = true;
+    }
+
+    /// Update `last_resched` to now and reset the `need_resched` flag
+    fn update_last_resched(&mut self) {
+        let clock = unsafe { &mut *kget().clock.get() };
+        self.last_resched = clock.now();
+        self.need_resched = false;
+    }
+
+    /// Find the next task with priority matching `priority`
+    fn next_task(&mut self, priority: TaskPriority) -> Option<Task> {
+        let mut i = 0;
+        let mut found = false;
+
+        for ref t in self.inactive_tasks.iter() {
+            if t.get_priority() != priority || t.get_status() != TaskStatus::READY {
+                // On to the next, this is not suitable
+                i += 1;
+            } else {
+                found = true;
+                break;
+            }
+        }
+
+        if found {
+            // Split inactive_tasks, remove the task we found, then re-merge the two lists
+            let mut remainder = self.inactive_tasks.split_off(i);
+            let next_task = remainder.pop_front();
+
+            // Merge the lists
+            loop {
+                match remainder.pop_front() {
+                    Some(t) => self.inactive_tasks.push_back(t),
+                    None => break,
+                }
+            }
+
+            next_task
+        } else {
+            None
+        }
     }
 }

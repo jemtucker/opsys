@@ -4,6 +4,8 @@ use core::cell::UnsafeCell;
 use schedule::Scheduler;
 use memory::MemoryManager;
 
+use drivers::Clock;
+
 // The main Kernel pointer, providing access to key objects
 pub static mut PKERNEL: Option<&'static mut Kernel> = None;
 
@@ -56,13 +58,15 @@ pub fn kget() -> &'static Kernel {
 pub struct Kernel {
     pub scheduler: UnsafeCell<Scheduler>,
     pub memory_manager: UnsafeCell<MemoryManager>,
+    pub clock: UnsafeCell<Clock>,
 }
 
 impl Kernel {
-    pub fn new(memory_manager: MemoryManager) -> Kernel {
+    pub fn new(mut memory_manager: MemoryManager) -> Kernel {
         Kernel {
-            scheduler: UnsafeCell::new(Scheduler::new()),
+            scheduler: UnsafeCell::new(Scheduler::new(&mut memory_manager)),
             memory_manager: UnsafeCell::new(memory_manager),
+            clock: UnsafeCell::new(Clock::new()),
         }
     }
 }

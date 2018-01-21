@@ -26,9 +26,9 @@ pub fn init(multiboot_info_address: usize) -> MemoryManager {
     let boot_info = unsafe { multiboot2::load(multiboot_info_address) };
 
     let memory_map_tag = boot_info.memory_map_tag().expect("Memory map tag required");
-    let elf_sections_tag = boot_info.elf_sections_tag().expect(
-        "Elf sections tag required",
-    );
+    let elf_sections_tag = boot_info
+        .elf_sections_tag()
+        .expect("Elf sections tag required");
 
     let kernel_start = elf_sections_tag
         .sections()
@@ -94,7 +94,9 @@ pub const PAGE_SIZE: usize = 4096;
 impl Frame {
     // TODO change to from_address?
     fn containing_address(address: usize) -> Frame {
-        Frame { number: address / PAGE_SIZE }
+        Frame {
+            number: address / PAGE_SIZE,
+        }
     }
 
     fn start_address(&self) -> PhysicalAddress {
@@ -102,7 +104,9 @@ impl Frame {
     }
 
     fn clone(&self) -> Frame {
-        Frame { number: self.number }
+        Frame {
+            number: self.number,
+        }
     }
 
     fn range_inclusive(start: Frame, end: Frame) -> FrameIter {

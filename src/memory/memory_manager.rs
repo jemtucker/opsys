@@ -34,10 +34,8 @@ impl MemoryManager {
     /// TODO This is super un-rusty, we should use RAII or something to ensure stacks deallocate
     /// themselves.
     pub fn allocate_stack(&mut self) -> Stack {
-        self.stack_allocator.allocate(
-            &mut self.active_table,
-            &mut self.frame_allocator,
-        )
+        self.stack_allocator
+            .allocate(&mut self.active_table, &mut self.frame_allocator)
     }
 
     /// Deallocate a kernel stack.

@@ -7,7 +7,7 @@ pub use self::entry::*;
 pub use self::mapper::Mapper;
 use self::temporary_page::TemporaryPage;
 use multiboot2::BootInformation;
-use memory::{PAGE_SIZE, Frame, FrameAllocator};
+use memory::{Frame, FrameAllocator, PAGE_SIZE};
 
 use core::ops::{Deref, DerefMut};
 
@@ -28,7 +28,9 @@ impl Page {
             "invalid address: 0x{:x}",
             address
         );
-        Page { number: address / PAGE_SIZE }
+        Page {
+            number: address / PAGE_SIZE,
+        }
     }
 
     pub fn range_inclusive(start: Page, end: Page) -> PageIter {
@@ -39,7 +41,9 @@ impl Page {
     }
 
     pub fn next_page(&self) -> Page {
-        Page { number: self.number + 1 }
+        Page {
+            number: self.number + 1,
+        }
     }
 
     pub fn start_address(&self) -> usize {
@@ -126,7 +130,9 @@ impl DerefMut for ActivePageTable {
 
 impl ActivePageTable {
     unsafe fn new() -> ActivePageTable {
-        ActivePageTable { mapper: Mapper::new() }
+        ActivePageTable {
+            mapper: Mapper::new(),
+        }
     }
 
     pub fn with<F>(
@@ -189,11 +195,10 @@ where
     };
 
     active_table.with(&mut new_table, &mut temporary_page, |mapper| {
-
         // Identity map the kernel sections
-        let elf_sections_tag = boot_info.elf_sections_tag().expect(
-            "Memory map tag required",
-        );
+        let elf_sections_tag = boot_info
+            .elf_sections_tag()
+            .expect("Memory map tag required");
 
         for section in elf_sections_tag.sections() {
             if !section.is_allocated() {

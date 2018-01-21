@@ -2,8 +2,11 @@ language: rust
 
 rust: nightly
 
-cache: cargo
-
+cache: 
+  directories:
+    - $HOME/.cargo
+    - $HOME/.xargo
+    - $TRAVIS_BUILD_DIR/target
 script: 
   - scripts/travis_build.sh
   - scripts/travis_pr.sh
@@ -13,7 +16,7 @@ before_script:
   - source ~/.cargo/env
   - rustup component add rust-src
   - (test -x $HOME/.cargo/bin/xargo || cargo install xargo)
-  - (test -x $HOME/.cargo/bin/rustfmt || cargo install rustfmt)
+  - (test $(cargo fmt --version | grep nightly | wc -l) -eq 1 || cargo install rustfmt-nightly --force)
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
   - cargo install-update -a
 

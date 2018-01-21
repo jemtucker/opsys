@@ -107,7 +107,6 @@ impl Pic {
             self.pic2.write(mask);
             kprintln!("PIC2 Mask: 0x{:x}", mask);
         }
-
     }
 
     pub fn clear_mask(&self, irq: u8) {

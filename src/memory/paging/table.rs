@@ -56,15 +56,13 @@ where
     L: HierarchicalLevel,
 {
     pub fn next_table(&self, index: usize) -> Option<&Table<L::NextLevel>> {
-        self.next_table_address(index).map(|address| unsafe {
-            &*(address as *const _)
-        })
+        self.next_table_address(index)
+            .map(|address| unsafe { &*(address as *const _) })
     }
 
     pub fn next_table_mut(&mut self, index: usize) -> Option<&mut Table<L::NextLevel>> {
-        self.next_table_address(index).map(|address| unsafe {
-            &mut *(address as *mut _)
-        })
+        self.next_table_address(index)
+            .map(|address| unsafe { &mut *(address as *mut _) })
     }
 
     pub fn next_table_create<A>(
