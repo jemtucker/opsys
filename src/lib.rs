@@ -8,6 +8,7 @@
 #![feature(global_allocator)]
 #![feature(const_unsafe_cell_new)]
 #![feature(const_unique_new)]
+#![feature(ptr_internals)]
 #![no_std]
 
 extern crate alloc;
