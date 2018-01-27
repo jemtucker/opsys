@@ -102,7 +102,7 @@ unsafe fn irq1() {
     let scheduler = &*kget().scheduler.get();
 
     let bh_manager = scheduler.bh_manager();
-    let keyboard = box drivers::Keyboard::new();
+    let bh = box drivers::KeyboardBottomHalf::new();
 
-    bh_manager.add_bh(keyboard);
+    bh_manager.add_bh(bh);
 }
