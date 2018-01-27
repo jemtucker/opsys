@@ -1,5 +1,9 @@
 mod rtc;
 mod keyboard;
 
-pub use self::keyboard::Keyboard;
+// Drivers
 pub use self::rtc::Clock;
+pub use self::keyboard::Keyboard;
+
+// Bottom Halves
+pub use self::keyboard::KeyboardBottomHalf;

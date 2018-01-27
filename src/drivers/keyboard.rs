@@ -2,6 +2,8 @@ use io::Port;
 
 use schedule::bottom_half::BottomHalf;
 
+use kernel::kget;
+
 static CHARS: [u8; 59] = *b"??1234567890-=\x08?qwertyuiop[]\n?asdfghjkl;'`?\\zxcvbnm,./?*? ?";
 static CHARS_SHIFT: [u8; 59] = *b"??!@#$%^&*()_+??QWERTYUIOP{}\n?ASDFGHJKL:\"~?|ZXCVBNM<>??*? ?";
 
@@ -44,10 +46,8 @@ impl Keyboard {
             None
         }
     }
-}
 
-impl BottomHalf for Keyboard {
-    fn execute(&mut self) {
+    fn handle_keypress(&mut self) {
         // Get the code of the keypress
         let code = unsafe {
             let c = self.port.read();
@@ -75,5 +75,20 @@ impl BottomHalf for Keyboard {
                 }
             }
         }
+    }
+}
+
+pub struct KeyboardBottomHalf {}
+
+impl KeyboardBottomHalf {
+    pub fn new() -> KeyboardBottomHalf {
+        KeyboardBottomHalf {}
+    }
+}
+
+impl BottomHalf for KeyboardBottomHalf {
+    fn execute(&mut self) {
+        let driver = unsafe { &mut *kget().keyboard.get() };
+        driver.handle_keypress();
     }
 }
